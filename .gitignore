@@ -1,0 +1,7 @@
+*.o
+*.a
+*.tmp
+.DS_Store
+obj/
+Makefile
+*.make
