@@ -26,6 +26,7 @@
 
 #include <snowball.h>
 
+#include <memory>
 #include <limits>
 
 
