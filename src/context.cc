@@ -101,7 +101,8 @@ sz_check_context(const sz_context_t *ctx, sz_mode_t mode)
 SZ_DEF_BEGIN
 
 
-const char *sz_get_error(sz_context_t *ctx)
+const char *
+sz_get_error(sz_context_t *ctx)
 {
   return ctx ? ctx->error : NULL;
 }
