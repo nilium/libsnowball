@@ -30,9 +30,15 @@
 
 
 typedef std::basic_string<
+#if __cplusplus >= 201103L
   char,
   std::char_traits<char>,
   sz_cxx_allocator_t<char>
+#else
+  char,
+  std::char_traits<char>,
+  std::allocator<char>
+#endif
   > sz_bufstring_t;
 
 
