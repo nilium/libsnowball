@@ -61,8 +61,35 @@ SZ_DEF_END
 # endif /* !__cplusplus */
 #endif /* !defined(NULL) */
 
-#define SZ_EXPORT __attribute__((visibility("default")))
-#define SZ_HIDDEN __attribute__((visibility("hidden")))
+
+#if defined(_WIN32) || defined(__MINGW32__)
+# if defined(SZ_BUILDING)
+    // EXPORT
+#   if defined(__GNUC__)
+#     define SZ_EXPORT \
+        __attribute__((dllexport))
+#   else
+#     define SZ_EXPORT \
+        __declspec(dllexport)
+#   endif
+# else
+    // IMPORT
+#   if defined(__GNUC__)
+#     define SZ_EXPORT \
+        __attribute__((dllimport))
+#   else
+#     define SZ_EXPORT \
+        __declspec(dllimport)
+#   endif
+# endif
+# define SZ_HIDDEN
+#else // def(win32) || def(mingw32)
+  // the sane way
+# define SZ_EXPORT \
+    __attribute__((visibility("default")))
+# define SZ_HIDDEN \
+    __attribute__((visibility("hidden")))
+#endif // !(win32 || mingw)
 
 
 #pragma GCC diagnostic pop
