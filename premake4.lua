@@ -24,7 +24,11 @@ language "C++"
   flags { "ExtraWarnings" }
 
   configuration "not c++98"
-    buildoptions { "-std=c++11", "-stdlib=libc++" }
+    buildoptions { "-std=c++11" }
+
+  -- TODO: find a way to check for this on non-OS X systems.
+  configuration { "not c++98", "macosx" }
+    buildoptions { "-stdlib=libc++" }
 
   configuration "Debug-*"
     defines { "DEBUG" }
