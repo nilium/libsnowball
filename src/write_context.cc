@@ -21,15 +21,19 @@
 */
 
 #include "write_context.hh"
+#include "error_strings.hh"
 #include "utilities.hh"
 #include "bufstream.hh"
 
 
-// Writes an arbitrary type val to a stream and returns zero on success, or
-// non-zero on failure. Should only be used for small-ish POD types.
+// Writes an arbitrary type val to a stream and returns false on success, or
+// true on failure. Should only be used for small-ish POD types.
+// For those wondering why false is the successful case, it's so you can just
+// do `if (write) then_error;`
 template <typename T>
 static
-int sz_write_prim(sz_stream_t *stream, T val)
+bool
+sz_write_prim(sz_stream_t *stream, T val)
 {
   return sz_stream_write(&val, sizeof(val), stream) != sizeof(val);
 }
@@ -46,9 +50,7 @@ sz_write_context_t::sz_write_context_t(sz_allocator_t *alloc)
 
 sz_write_context_t::~sz_write_context_t()
 {
-  for (sz_stream_t *stream : compound_streams) {
-    sz_stream_close(stream);
-  }
+  cleanup();
 }
 
 
@@ -59,18 +61,121 @@ sz_write_context_t::mode() const
 }
 
 
+sz_response_t
+sz_write_context_t::open()
+{
+  if (active || bufstream) {
+    error = sz_errstr_already_open;
+    return SZ_ERROR_CONTEXT_OPEN;
+  } else if (stream == NULL) {
+    error = sz_errstr_null_stream;
+    return SZ_ERROR_INVALID_STREAM;
+  }
+
+  active = bufstream = sz_buffer_stream(SZ_WRITER, ctx_alloc);
+  return SZ_SUCCESS;
+}
+
+
+sz_response_t
+sz_write_context_t::flush()
+{
+  sz_root_t root = {
+    SZ_MAGIC,
+    0,
+    uint32_t(compound_streams.size()),
+    uint32_t(sizeof(root)),
+    ~0U,
+    ~0U
+  };
+
+  const std::string main_buf = sz_buffer_stream_data(bufstream);
+  const size_t data_size = main_buf.size();
+
+  uint32_t compounds_size = 0;
+  const uint32_t mappings_size =
+    root.num_compounds * uint32_t(sizeof(uint32_t));
+
+  // Grab all compound buffers and their combined size
+  std::vector<std::string> compound_buffers;
+  for (sz_stream_t *cmp_stream : compound_streams) {
+    compound_buffers.push_back(sz_buffer_stream_data(cmp_stream));
+    compounds_size += compound_buffers.back().size();
+  }
+
+  root.compounds_offset = root.mappings_offset + mappings_size;
+  root.data_offset = root.compounds_offset + compounds_size;
+  root.size = root.data_offset + data_size;
+
+  SZ_RETURN_IF_ERROR( write_root(root) );
+
+  uint32_t relative_offset = uint32_t(sizeof(root) + mappings_size);
+  for (const std::string &buf : compound_buffers) {
+    if (sz_write_prim(stream, relative_offset)) {
+      return file_error();
+    }
+    relative_offset += uint32_t(buf.size());
+  }
+
+  for (const std::string &buf : compound_buffers) {
+    const size_t write_size = buf.size();
+    if (sz_stream_write(buf.data(), write_size, stream) != write_size) {
+      return file_error();
+    }
+  }
+
+  if (   data_size
+      && sz_stream_write(main_buf.data(), data_size, stream) != data_size) {
+    return file_error();
+  }
+
+  return SZ_SUCCESS;
+}
+
+
+sz_response_t
+sz_write_context_t::close()
+{
+  SZ_RETURN_IF_CLOSED;
+
+  SZ_RETURN_IF_ERROR( flush() );
+
+  cleanup();
+
+  return SZ_SUCCESS;
+}
+
+
+void
+sz_write_context_t::cleanup()
+{
+  if (bufstream) {
+    sz_stream_close(bufstream);
+  }
+  active = bufstream = NULL;
+
+  for (sz_stream_t *cmp_stream : compound_streams) {
+    sz_stream_close(cmp_stream);
+  }
+
+  compound_indices.clear();
+  compound_streams.clear();
+  streams.clear();
+}
+
+
 void
 sz_write_context_t::push_stack()
 {
-  streams.push_back(stream);
-  stream = compound_streams.back();
+  streams.push_back(active);
+  active = compound_streams.back();
 }
 
 
 void
 sz_write_context_t::pop_stack()
 {
-  stream = streams.back();
+  active = streams.back();
   streams.pop_back();
 }
 
@@ -94,9 +199,9 @@ sz_write_context_t::write_root(const sz_root_t &root)
 sz_response_t
 sz_write_context_t::write_header(const sz_header_t &header)
 {
-  if (   sz_write_prim(stream, header.kind)
-      || sz_write_prim(stream, header.name)
-      || sz_write_prim(stream, header.size)) {
+  if (   sz_write_prim(active, header.kind)
+      || sz_write_prim(active, header.name)
+      || sz_write_prim(active, header.size)) {
     return file_error();
   }
 
@@ -112,18 +217,17 @@ sz_write_context_t::write_primitive(
   uint32_t name
   )
 {
+  SZ_RETURN_IF_CLOSED;
+
   sz_header_t header = {
     type,
     name,
     uint32_t(sizeof(sz_header_t) + type_size)
   };
 
-  sz_response_t response = write_header(header);
-  if (response != SZ_SUCCESS) {
-    return response;
-  }
+  SZ_RETURN_IF_ERROR( write_header(header) );
 
-  if (sz_stream_write(input, type_size, stream) != type_size) {
+  if (sz_stream_write(input, type_size, active) != type_size) {
     return file_error();
   }
 
@@ -140,6 +244,8 @@ sz_write_context_t::write_primitive_array(
   uint32_t name
   )
 {
+  SZ_RETURN_IF_CLOSED;
+
   size_t data_size = length * type_size;
   sz_array_t header = {
     {
@@ -151,21 +257,16 @@ sz_write_context_t::write_primitive_array(
     type
   };
 
-  if (input == NULL) {
+  // null or zero-length arrays are written as a null chunk.
+  if (input == NULL || !(length * type_size)) {
     return write_null_pointer(name);
   }
 
-  sz_response_t response = write_header(header.base);
-  if (response != SZ_SUCCESS) {
-    return response;
-  }
+  SZ_RETURN_IF_ERROR( write_header(header.base) );
 
-  if (   sz_write_prim(stream, header.length)
-      || sz_write_prim(stream, header.type)) {
-    return file_error();
-  }
-
-  if (sz_stream_write(input, data_size, stream) != data_size) {
+  if (   sz_write_prim(active, header.length)
+      || sz_write_prim(active, header.type)
+      || sz_stream_write(input, data_size, active) != data_size) {
     return file_error();
   }
 
@@ -246,8 +347,6 @@ sz_write_context_t::write_compound_array(
     return write_null_pointer(name);
   }
 
-  sz_stream_t *active = stream;
-
   sz_array_t header = {
     {
       SZ_ARRAY_CHUNK,
@@ -258,13 +357,10 @@ sz_write_context_t::write_compound_array(
     SZ_COMPOUND_REF_CHUNK
   };
 
-  sz_response_t response = write_header(header.base);
-  if (response != SZ_SUCCESS) {
-    return response;
-  }
+  SZ_RETURN_IF_ERROR( write_header(header.base) );
 
-  if (   sz_write_prim(stream, header.length)
-      || sz_write_prim(stream, header.type)) {
+  if (   sz_write_prim(active, header.length)
+      || sz_write_prim(active, header.type)) {
     return file_error();
   }
 
@@ -278,6 +374,12 @@ sz_write_context_t::write_compound_array(
   return SZ_SUCCESS;
 }
 
+
+bool
+sz_write_context_t::opened() const
+{
+  return bufstream || active;
+}
 
 
 SZ_DEF_BEGIN
@@ -305,7 +407,13 @@ sz_write_compounds(
   void *writer_ctx
   )
 {
-  SZ_AS_WRITER(ctx, return)->write_compound_array(compounds, length, writer, writer_ctx, name);
+  SZ_AS_WRITER(ctx, return)->write_compound_array(
+    compounds,
+    length,
+    writer,
+    writer_ctx,
+    name
+    );
 }
 
 
@@ -317,14 +425,24 @@ sz_write_bytes(
   size_t length
   )
 {
-  SZ_AS_WRITER(ctx, return)->write_primitive(values, SZ_BYTES_CHUNK, length, name);
+  SZ_AS_WRITER(ctx, return)->write_primitive(
+    values,
+    SZ_BYTES_CHUNK,
+    length,
+    name
+    );
 }
 
 
 sz_response_t
 sz_write_float(sz_context_t *ctx, uint32_t name, float value)
 {
-  SZ_AS_WRITER(ctx, return)->write_primitive(&value, SZ_FLOAT_CHUNK, sizeof(value), name);
+  SZ_AS_WRITER(ctx, return)->write_primitive(
+    &value,
+    SZ_FLOAT_CHUNK,
+    sizeof(value),
+    name
+    );
 }
 
 
@@ -336,14 +454,25 @@ sz_write_floats(
   size_t length
   )
 {
-  SZ_AS_WRITER(ctx, return)->write_primitive_array(values, SZ_FLOAT_CHUNK, sizeof(*values), length, name);
+  SZ_AS_WRITER(ctx, return)->write_primitive_array(
+    values,
+    SZ_FLOAT_CHUNK,
+    sizeof(*values),
+    length,
+    name
+    );
 }
 
 
 sz_response_t
 sz_write_int(sz_context_t *ctx, uint32_t name, int32_t value)
 {
-  SZ_AS_WRITER(ctx, return)->write_primitive(&value, SZ_SINT32_CHUNK, sizeof(value), name);
+  SZ_AS_WRITER(ctx, return)->write_primitive(
+    &value,
+    SZ_SINT32_CHUNK,
+    sizeof(value),
+    name
+    );
 }
 
 
@@ -355,14 +484,25 @@ sz_write_ints(
   size_t length
   )
 {
-  SZ_AS_WRITER(ctx, return)->write_primitive_array(values, SZ_SINT32_CHUNK, sizeof(*values), length, name);
+  SZ_AS_WRITER(ctx, return)->write_primitive_array(
+    values,
+    SZ_SINT32_CHUNK,
+    sizeof(*values),
+    length,
+    name
+    );
 }
 
 
 sz_response_t
 sz_write_unsigned_int(sz_context_t *ctx, uint32_t name, uint32_t value)
 {
-  SZ_AS_WRITER(ctx, return)->write_primitive(&value, SZ_UINT32_CHUNK, sizeof(value), name);
+  SZ_AS_WRITER(ctx, return)->write_primitive(
+    &value,
+    SZ_UINT32_CHUNK,
+    sizeof(value),
+    name
+    );
 }
 
 
@@ -374,7 +514,13 @@ sz_write_unsigned_ints(
   size_t length
   )
 {
-  SZ_AS_WRITER(ctx, return)->write_primitive_array(values, SZ_UINT32_CHUNK, sizeof(*values), length, name);
+  SZ_AS_WRITER(ctx, return)->write_primitive_array(
+    values,
+    SZ_UINT32_CHUNK,
+    sizeof(*values),
+    length,
+    name
+    );
 }
 
 

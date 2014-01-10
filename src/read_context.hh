@@ -26,6 +26,8 @@
 
 #include "context.hh"
 #include "chunk.hh"
+#include "bufstream.hh"
+#include "allocator_wrapper.hh"
 
 #include <map>
 #include <vector>
@@ -36,15 +38,30 @@ struct SZ_HIDDEN sz_read_context_t : public s_sz_context
 private:
 
   struct unpacked_compound_t {
-    void *value;      // NULL if not yet unpacked
-    off_t position;   // Position of the item in the input file
+    off_t offset;     // Position of the item in the input file
+    void *value;      // may be NULL
+    // whether the compound has been read -- if this is true, no further
+    // attempts are made to read the compound and its unpacked value will be
+    // used instead. This can help with cycles, though it has one drawback: the
+    // compounds pointer's value must be set before the next compound in the
+    // cycle is read, otherwise it will receive a null compound pointer.
+    bool unpacked;
   };
 
-  typedef std::vector<off_t> offsets_t;
-  typedef std::vector<unpacked_compound_t> compounds_t;
+  static const unpacked_compound_t default_unpacked_compound;
+
+  typedef std::vector<off_t, sz_cxx_allocator_t<off_t>> offsets_t;
+  typedef std::vector<
+    unpacked_compound_t,
+    sz_cxx_allocator_t<unpacked_compound_t>
+    > compounds_t;
 
   compounds_t compounds;
+  offsets_t offsets;
 
+  // I can't track whether the context is open by whether something exists, so
+  // just keep a flag I can set/unset...
+  bool is_open;
 
 public:
 
@@ -67,8 +84,9 @@ public:
   sz_response_t
   read_header(
     sz_header_t *header,
+    sz_chunk_id_t type,
     uint32_t name,
-    sz_chunk_id_t type
+    bool null_allowed
     );
 
 
@@ -76,8 +94,8 @@ public:
   sz_response_t
   read_array_header(
     sz_array_t *chunk,
-    uint32_t name,
-    sz_chunk_id_t type
+    sz_chunk_id_t type,
+    uint32_t name
     );
 
   sz_response_t
@@ -97,6 +115,33 @@ public:
   pop_stack();
 
 
+  // Compounds
+  sz_response_t
+  read_compound(
+    void **compound,
+    uint32_t name,
+    sz_compound_reader_fn_t reader,
+    void *reader_ctx
+    );
+
+  sz_response_t
+  read_compound_array(
+    void ***compound,
+    size_t *length,
+    uint32_t name,
+    sz_compound_reader_fn_t reader,
+    void *reader_ctx,
+    sz_allocator_t *alloc
+    );
+
+  void *
+  get_compound(
+    uint32_t index,
+    sz_compound_reader_fn_t reader,
+    void *reader_ctx
+    );
+
+
   // Primitives
   sz_response_t
   read_primitive(
@@ -104,6 +149,24 @@ public:
     sz_chunk_id_t type,
     size_t type_size,
     uint32_t name
+    );
+
+  sz_response_t
+  read_primitive_array(
+    void **out,
+    size_t *length,
+    sz_chunk_id_t type,
+    size_t type_size,
+    uint32_t name,
+    sz_allocator_t *buf_alloc
+    );
+
+  sz_response_t
+  read_bytes(
+    void **out,
+    size_t *length,
+    uint32_t name,
+    sz_allocator_t *buf_alloc
     );
 
   // Reading
@@ -114,18 +177,18 @@ public:
   end_read();
 
 
-  // Open / flush / close ops
+  // Open / close ops
   virtual
   sz_response_t
   open();
 
   virtual
   sz_response_t
-  flush();
+  close();
 
   virtual
-  sz_response_t
-  close();
+  bool
+  opened() const;
 
 };
 

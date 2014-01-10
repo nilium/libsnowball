@@ -62,13 +62,36 @@ s_sz_context::file_error() const
 
 
 sz_response_t
+s_sz_context::set_stream(sz_stream_t *stream)
+{
+  if (stream == NULL) {
+    error = sz_errstr_null_stream;
+    return SZ_ERROR_INVALID_STREAM;
+  } else if (opened()) {
+    error = sz_errstr_open_set_stream;
+    return SZ_ERROR_CONTEXT_OPEN;
+  }
+
+  this->stream = stream;
+  stream_pos = sz_stream_tell(stream);
+
+  return SZ_SUCCESS;
+}
+
+
+sz_response_t
 sz_check_context(const sz_context_t *ctx, sz_mode_t mode)
 {
-  if (NULL == ctx) return SZ_ERROR_NULL_CONTEXT;
+  if (NULL == ctx) {
+    return SZ_ERROR_NULL_CONTEXT;
+  }
 
   if (mode != ctx->mode()) {
-    ctx->error = (mode == SZ_READER) ? sz_errstr_read_on_write
-                                     : sz_errstr_write_on_read;
+    ctx->error =
+      (mode == SZ_READER)
+      ? sz_errstr_read_on_write
+      : sz_errstr_write_on_read;
+
     return SZ_ERROR_INVALID_OPERATION;
   }
 
@@ -123,6 +146,28 @@ sz_destroy_context(sz_context_t *ctx)
   sz_free(ctx, alloc);
 
   return SZ_SUCCESS;
+}
+
+
+sz_response_t
+sz_close(sz_context_t *ctx)
+{
+  if (ctx == NULL) {
+    return SZ_ERROR_NULL_CONTEXT;
+  }
+
+  return ctx->close();
+}
+
+
+sz_response_t
+sz_open(sz_context_t *ctx)
+{
+  if (ctx == NULL) {
+    return SZ_ERROR_NULL_CONTEXT;
+  }
+
+  return ctx->open();
 }
 
 

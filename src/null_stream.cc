@@ -20,60 +20,71 @@
   IN THE SOFTWARE.
 */
 
-#ifndef __SZ_SNOWBALL__CONTEXT_HH__
-#define __SZ_SNOWBALL__CONTEXT_HH__
-
-
 #include <snowball.h>
 
 
-struct SZ_HIDDEN s_sz_context
+static
+size_t
+sz_nullstream_read(void *p, size_t length, sz_stream_t *stream)
 {
-  mutable const char *  error;
-  sz_allocator_t *      ctx_alloc;
+  (void)p;
+  (void)length;
+  (void)stream;
+  return 0;
+}
 
-  sz_stream_t *         stream;
-  off_t                 stream_pos;
+
+static
+size_t
+sz_nullstream_write(const void *p, size_t length, sz_stream_t *stream)
+{
+  (void)p;
+  (void)length;
+  (void)stream;
+  return 0;
+}
 
 
-  s_sz_context(sz_allocator_t *alloc);
+static
+off_t
+sz_nullstream_seek(off_t off, int whence, sz_stream_t *stream)
+{
+  (void)off;
+  (void)whence;
+  (void)stream;
+  return 0;
+}
 
-  virtual
-  ~s_sz_context() = 0;
 
-  virtual
-  sz_mode_t
-  mode() const = 0;
+static
+int
+sz_nullstream_eof(sz_stream_t *stream)
+{
+  (void)stream;
+  return 1;
+}
 
-  sz_response_t
-  file_error() const;
 
-  virtual
-  sz_response_t
-  open() = 0;
+static
+void
+sz_nullstream_close(sz_stream_t *stream)
+{
+  (void)stream;
+}
 
-  virtual
-  sz_response_t
-  close() = 0;
 
-  sz_response_t
-  set_stream(sz_stream_t *stream);
-
-  virtual
-  bool
-  opened() const = 0;
+static sz_stream_t sz_null_stream_ops = {
+  sz_nullstream_read,
+  sz_nullstream_write,
+  sz_nullstream_seek,
+  sz_nullstream_eof,
+  sz_nullstream_close
 };
 
 
-// Check whether ctx is non-null and has the given mode and return the
-// appropriate response code (i.e., if null, there's a response code for that,
-// if a reader and I want a writer, there's a code for that, etc.)
-//
-// All possible return values:
-// ctx is null =>
-SZ_HIDDEN
-sz_response_t
-sz_check_context(const sz_context_t *ctx, sz_mode_t mode);
+sz_stream_t *
+sz_stream_null()
+{
+  return &sz_null_stream_ops;
+}
 
-
-#endif /* end __SZ_SNOWBALL__CONTEXT_HH__ include guard */

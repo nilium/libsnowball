@@ -30,6 +30,9 @@
 SZ_HIDDEN extern const char *const sz_errstr_no_error;
 SZ_HIDDEN extern const char *const sz_errstr_null_context;
 SZ_HIDDEN extern const char *const sz_errstr_invalid_root;
+SZ_HIDDEN extern const char *const sz_errstr_invalid_magic_head;
+SZ_HIDDEN extern const char *const sz_errstr_invalid_magic_version;
+SZ_HIDDEN extern const char *const sz_errstr_invalid_root;
 SZ_HIDDEN extern const char *const sz_errstr_wrong_kind;
 SZ_HIDDEN extern const char *const sz_errstr_bad_name;
 SZ_HIDDEN extern const char *const sz_errstr_cannot_read;
@@ -40,6 +43,7 @@ SZ_HIDDEN extern const char *const sz_errstr_read_on_write;
 SZ_HIDDEN extern const char *const sz_errstr_compound_reader_null;
 SZ_HIDDEN extern const char *const sz_errstr_already_closed;
 SZ_HIDDEN extern const char *const sz_errstr_already_open;
+SZ_HIDDEN extern const char *const sz_errstr_open_set_stream;
 SZ_HIDDEN extern const char *const sz_errstr_null_stream;
 SZ_HIDDEN extern const char *const sz_errstr_empty_array;
 SZ_HIDDEN extern const char *const sz_errstr_nomem;

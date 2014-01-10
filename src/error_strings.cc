@@ -26,12 +26,17 @@
 const char *const sz_errstr_no_error =
   "No error.";
 
-
 const char *const sz_errstr_null_context =
   "Null serializer context.";
 
 const char *const sz_errstr_invalid_root =
   "Invalid magic number for root.";
+
+const char *const sz_errstr_invalid_magic_head =
+  "First two bytes of the magic number for the stream are invalid.";
+
+const char *const sz_errstr_invalid_magic_version =
+  "The version of this snowball is not supported.";
 
 const char *const sz_errstr_wrong_kind =
   "Invalid chunk header: wrong chunk kind.";
@@ -61,6 +66,9 @@ const char *const sz_errstr_already_closed =
   "Cannot close serializer that isn't open.";
 
 const char *const sz_errstr_already_open =
+  "Invalid operation on open context.";
+
+const char *const sz_errstr_open_set_stream =
   "Cannot set stream for open serializer.";
 
 const char *const sz_errstr_null_stream =

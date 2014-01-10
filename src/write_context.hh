@@ -36,9 +36,15 @@ private:
   typedef std::vector<sz_stream_t *> stream_stack_t;
   typedef std::map<void *, uint32_t> compound_map_t;
 
+  sz_stream_t *bufstream;
+  sz_stream_t *active;
   stream_stack_t streams;
   stream_stack_t compound_streams;
   compound_map_t compound_indices;
+
+
+  void
+  cleanup();
 
 
 public:
@@ -129,13 +135,16 @@ public:
   sz_response_t
   open();
 
-  virtual
   sz_response_t
   flush();
 
   virtual
   sz_response_t
   close();
+
+  virtual
+  bool
+  opened() const;
 };
 
 

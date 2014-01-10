@@ -23,6 +23,7 @@
 #ifndef __SZ_SNOWBALL_H__
 #define __SZ_SNOWBALL_H__
 
+
 #if defined(__cplusplus)
 # define SZ_DEF_BEGIN extern "C" {
 # define SZ_DEF_END \
@@ -36,15 +37,17 @@
 #endif
 
 
-
 SZ_DEF_BEGIN
 #include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
 SZ_DEF_END
 
+
+//
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wundef"
+
 
 #if defined(__APPLE__)
 # include <TargetConditionals.h>
@@ -66,8 +69,11 @@ SZ_DEF_END
 #define SZ_EXPORT __attribute__((visibility("default")))
 #define SZ_HIDDEN __attribute__((visibility("hidden")))
 
+
 #pragma GCC diagnostic pop
 
+
+// Version numbers
 #define SZ_VERSION_MAJOR      1
 #define SZ_VERSION_MINOR      0
 #define SZ_VERSION_REVISION   0
@@ -81,11 +87,13 @@ enum SZ_TYPE_ENUM(uint32_t)
   SZ_MAGIC = 0x31305A53
 };
 
+
 #define SZ_MAGIC_VER_SUB_ONE(m) \
   (((m) & 0xFF) - 0x30)
 
 #define SZ_MAGIC_VER_INT(m) \
   (SZ_MAGIC_VER_SUB_ONE((m) >> 24) + SZ_MAGIC_VER_SUB_ONE((m) >> 16) * 10)
+
 
 typedef enum SZ_TYPE_ENUM(uint32_t)
 {
@@ -103,14 +111,22 @@ typedef enum SZ_TYPE_ENUM(uint32_t)
   SZ_DOUBLE_CHUNK = 9,
 } sz_chunk_id_t;
 
+
 // Responses
 typedef enum
 {
   SZ_SUCCESS = 0,
   SZ_ERROR_NONE = SZ_SUCCESS,
+  // Each of these occurs when the context is either already open or closed.
+  SZ_ERROR_CONTEXT_OPEN,
+  SZ_ERROR_CONTEXT_CLOSED,
   // Root is invalid, typically meaning it's not actually a serializable stream.
   SZ_INVALID_ROOT,
-  // Error when attempting to write an empty array (length == 0).
+  SZ_ERROR_MALFORMED_MAGIC_HEAD,    // The first two bytes of the magic int are invalid
+  SZ_ERROR_MALFORMED_MAGIC_VERSION, // The version component of the magic int is invalid (too old or new)
+  // Error when attempting to read an empty array (length == 0). These don't
+  // occur in snowballs, as they're stored as a null chunk -- in other words,
+  // any zero-length array in a snowball means something went wrong.
   SZ_ERROR_EMPTY_ARRAY,
   // A pointer is NULL.  For input operations, this means a required input
   // (e.g., an array of floats) is NULL.  For output operations, all pointers
@@ -138,13 +154,16 @@ typedef enum
   SZ_ERROR_EOF
 } sz_response_t;
 
+
 typedef enum
 {
   SZ_READER,
   SZ_WRITER
 } sz_mode_t;
 
+
 typedef struct s_sz_context sz_context_t;
+
 
 typedef struct s_sz_version
 {
@@ -153,7 +172,10 @@ typedef struct s_sz_version
   int revision;
 } sz_version_t;
 
-SZ_EXPORT sz_version_t sz_version();
+SZ_EXPORT
+sz_version_t
+sz_version();
+
 
 typedef void (sz_compound_writer_fn_t)(
   void *compound,
@@ -184,7 +206,8 @@ typedef void (sz_compound_writer_fn_t)(
 typedef void (sz_compound_reader_fn_t)(
   void **compound,
   sz_context_t *ctx,
-  void *reader_ctx);
+  void *reader_ctx
+  );
 
 
 /*
@@ -221,6 +244,7 @@ struct s_sz_context {
 
 
 typedef struct s_sz_allocator sz_allocator_t;
+
 
 struct s_sz_allocator
 {
@@ -262,7 +286,13 @@ struct s_sz_stream
 
 SZ_EXPORT
 sz_stream_t *
-sz_stream_fopen(const char *filename, sz_mode_t mode);
+sz_stream_fopen(const char *filename, sz_mode_t mode, sz_allocator_t *alloc);
+
+// Returns a stream that does nothing and always fails to read/write/seek.
+// Handy for testing, occasionally.
+SZ_EXPORT
+sz_stream_t *
+sz_stream_null();
 
 SZ_EXPORT
 size_t
@@ -286,7 +316,7 @@ int
 sz_stream_eof(sz_stream_t *stream);
 
 SZ_EXPORT
-int
+void
 sz_stream_close(sz_stream_t *stream);
 
 

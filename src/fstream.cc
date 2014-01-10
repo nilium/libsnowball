@@ -29,6 +29,7 @@ struct sz_fstream_t
 {
   sz_stream_t base;
 
+  sz_allocator_t *allocator;
   FILE *file;
 };
 
@@ -58,8 +59,6 @@ void
 sz_fstream_close(sz_stream_t *stream);
 
 
-
-
 sz_stream_t sz_fstream_base = {
   sz_fstream_read,
   sz_fstream_write,
@@ -73,20 +72,21 @@ SZ_DEF_BEGIN
 
 
 sz_stream_t *
-sz_stream_fopen(const char *filename, sz_mode_t mode)
+sz_stream_fopen(const char *filename, sz_mode_t mode, sz_allocator_t *alloc)
 {
   sz_fstream_t *stream = NULL;
   FILE *file = NULL;
 
   switch (mode) {
-  case SZ_READER: file = fopen(filename, "rb"); break;
-  case SZ_WRITER: file = fopen(filename, "wb"); break;
+  case SZ_READER: file = fopen(filename, "rb+"); break;
+  case SZ_WRITER: file = fopen(filename, "wb+"); break;
   default: break;
   }
 
   if (file) {
-    stream = new sz_fstream_t;
+    stream = (sz_fstream_t *)sz_malloc(sizeof(sz_fstream_t), alloc);
     stream->base = sz_fstream_base;
+    stream->allocator = alloc;
     stream->file = file;
   }
 
@@ -101,7 +101,8 @@ static
 size_t
 sz_fstream_read(void *out, size_t length, sz_stream_t *stream)
 {
-  return 0;
+  sz_fstream_t *fstream = (sz_fstream_t *)stream;
+  return fread(out, length, 1, fstream->file);
 }
 
 
@@ -109,7 +110,8 @@ static
 size_t
 sz_fstream_write(const void *in, size_t length, sz_stream_t *stream)
 {
-  return 0;
+  sz_fstream_t *fstream = (sz_fstream_t *)stream;
+  return fwrite(in, length, 1, fstream->file);
 }
 
 
@@ -117,7 +119,14 @@ static
 off_t
 sz_fstream_seek(off_t off, int whence, sz_stream_t *stream)
 {
-  return 0;
+  sz_fstream_t *fstream = (sz_fstream_t *)stream;
+  if (off != 0 && whence != SEEK_CUR) {
+    int result = fseek(fstream->file, long(off), whence);
+    if (result) {
+      return off_t(result);
+    }
+  }
+  return ftell(fstream->file);
 }
 
 
@@ -125,7 +134,8 @@ static
 int
 sz_fstream_eof(sz_stream_t *stream)
 {
-  return 0;
+  sz_fstream_t *fstream = (sz_fstream_t *)stream;
+  return feof(fstream->file);
 }
 
 
@@ -133,5 +143,8 @@ static
 void
 sz_fstream_close(sz_stream_t *stream)
 {
+  sz_fstream_t *fstream = (sz_fstream_t *)stream;
+  fclose(fstream->file);
+  sz_free(fstream, fstream->allocator);
 }
 

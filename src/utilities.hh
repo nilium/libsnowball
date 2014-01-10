@@ -24,28 +24,47 @@
 #define __UTILITIES_HH__
 
 
-#define SZ_RETURN_IF(EXPR, RET) \
-  do { \
-    if ((EXPR)) { \
-      return (RET); \
-    } \
-  } while(0)
-
-
-#define SZ_RETURN_IF_ERROR(EXPR) \
-  do { \
-    sz_response_t sz_ret_error = (EXPR); \
-    SZ_RETURN_IF(sz_ret_error != SZ_SUCCESS, sz_ret_error); \
+#define SZ_JUMP_IF_ERROR(EXPR, ASSIGN, LABEL)                 \
+  do {                                                        \
+    sz_response_t sz_ret_error = (EXPR);                      \
+    if (sz_ret_error != SZ_SUCCESS) {                         \
+      ASSIGN = sz_ret_error;                                  \
+      goto LABEL;                                             \
+    }                                                         \
   } while (0)
 
 
-#define SZ_AS_WRITER(CTX, PREFIX) \
-  SZ_RETURN_IF_ERROR(sz_check_context((CTX), SZ_WRITER)); \
+#define SZ_RETURN_IF(EXPR, RET)                               \
+  do {                                                        \
+    if ((EXPR)) {                                             \
+      return (RET);                                           \
+    }                                                         \
+  } while(0)
+
+
+#define SZ_RETURN_IF_ERROR(EXPR)                              \
+  do {                                                        \
+    sz_response_t sz_ret_error = (EXPR);                      \
+    SZ_RETURN_IF(sz_ret_error != SZ_SUCCESS, sz_ret_error);   \
+  } while (0)
+
+
+#define SZ_RETURN_IF_CLOSED                                   \
+  do {                                                        \
+    if (!opened()) {                                          \
+      error = sz_errstr_already_closed;                       \
+      return SZ_ERROR_CONTEXT_CLOSED;                         \
+    }                                                         \
+  } while(0)
+
+
+#define SZ_AS_WRITER(CTX, PREFIX)                             \
+  SZ_RETURN_IF_ERROR(sz_check_context((CTX), SZ_WRITER));     \
   PREFIX (static_cast<sz_write_context_t *>((CTX)))
 
 
-#define SZ_AS_READER(CTX, PREFIX) \
-  SZ_RETURN_IF_ERROR(sz_check_context((CTX), SZ_WRITER)); \
+#define SZ_AS_READER(CTX, PREFIX)                             \
+  SZ_RETURN_IF_ERROR(sz_check_context((CTX), SZ_WRITER));     \
   PREFIX (static_cast<sz_read_context_t *>((CTX)))
 
 
