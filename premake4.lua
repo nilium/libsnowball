@@ -10,6 +10,8 @@ files { "src/*.cc", "src/*.hh", "include/*.h" }
 includedirs { "include" }
 buildoptions { "-std=c++11", "-stdlib=libc++" }
 
+flags { "ExtraWarnings" }
+
 configuration "Debug"
   defines { "DEBUG" }
   flags { "Symbols" }
