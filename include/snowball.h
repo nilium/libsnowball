@@ -29,7 +29,11 @@
 # define SZ_DEF_END \
   }
   // Place the } on a second line because Sublime hates highlighting this.
-# define SZ_TYPE_ENUM(TYPE) : TYPE
+# if __cplusplus >= 201103L
+#   define SZ_TYPE_ENUM(TYPE) : TYPE
+# else
+#   define SZ_TYPE_ENUM(TYPE)
+# endif
 #else
 # define SZ_DEF_BEGIN
 # define SZ_DEF_END
