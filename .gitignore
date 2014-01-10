@@ -5,3 +5,8 @@
 obj/
 Makefile
 *.make
+docs/
+*.so
+*.dll
+*.dylib
+*.d
