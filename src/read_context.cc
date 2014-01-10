@@ -218,7 +218,6 @@ sz_read_context_t::read_array_body(
   }
 
   const size_t block_remainder = size_t(chunk->base.size) - sizeof(sz_array_t);
-  const size_t element_size = block_remainder / arr_length;
 
   off_t end_of_block = sz_stream_tell(stream);
 
