@@ -57,7 +57,6 @@ s_sz_context::file_error() const
       return SZ_ERROR_CANNOT_WRITE;
     }
   }
-  return SZ_SUCCESS;
 }
 
 
