@@ -44,14 +44,9 @@ SZ_DEF_BEGIN
 SZ_DEF_END
 
 
-//
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wundef"
 
-
-#if defined(__APPLE__)
-# include <TargetConditionals.h>
-#endif
 
 /* define NULL ifndef */
 #if !defined(NULL)
