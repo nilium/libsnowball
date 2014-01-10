@@ -108,6 +108,13 @@ sz_get_error(sz_context_t *ctx)
 }
 
 
+sz_response_t
+sz_set_stream(sz_context_t *ctx, sz_stream_t *stream)
+{
+  return ctx ? ctx->set_stream(stream) : SZ_ERROR_NULL_CONTEXT;
+}
+
+
 sz_context_t *
 sz_new_context(sz_mode_t mode, sz_allocator_t *allocator)
 {
