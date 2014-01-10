@@ -77,10 +77,20 @@ struct sz_bufstream_t
 };
 
 
+static sz_stream_t sz_bufstream_base = {
+  sz_bufstream_read,
+  sz_bufstream_write,
+  sz_bufstream_seek,
+  sz_bufstream_eof,
+  sz_bufstream_close
+};
+
+
 sz_stream_t *
 sz_buffer_stream(sz_mode_t mode, sz_allocator_t *alloc)
 {
   sz_bufstream_t *stream = (sz_bufstream_t *)sz_malloc(sizeof(sz_bufstream_t), alloc);
+  stream->base = sz_bufstream_base;
   stream->init();
   stream->mode = mode;
   return (sz_stream_t *)stream;
