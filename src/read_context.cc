@@ -213,10 +213,6 @@ sz_read_context_t::read_array_body(
     *length = arr_length;
   }
 
-  if (alloc == NULL) {
-    alloc = sz_default_allocator();
-  }
-
   const size_t block_remainder = size_t(chunk->base.size) - sizeof(sz_array_t);
 
   off_t end_of_block = sz_stream_tell(stream);
@@ -305,10 +301,6 @@ sz_read_context_t::read_bytes(
   const off_t error_off = sz_stream_tell(stream);
   size_t bytes_length = 0;
   void *buffer = NULL;
-
-  if (buf_alloc == NULL) {
-    buf_alloc = sz_default_allocator();
-  }
 
   SZ_JUMP_IF_ERROR(
     read_header(&header, SZ_BYTES_CHUNK, name, true),
@@ -472,10 +464,6 @@ sz_read_context_t::read_compound_array(
   sz_response_t response;
   sz_array_t header;
   const off_t error_off = sz_stream_tell(stream);
-
-  if (alloc == NULL) {
-    alloc = sz_default_allocator();
-  }
 
   void **compound_ptrs = NULL;
   size_t array_length = 0;
