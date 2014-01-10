@@ -28,11 +28,12 @@ SZ_DEF_BEGIN
 
 sz_version_t sz_version()
 {
-  return {
+  const static sz_version_t version = {
     SZ_VERSION_MAJOR,
     SZ_VERSION_MINOR,
     SZ_VERSION_REVISION
   };
+  return version;
 }
 
 

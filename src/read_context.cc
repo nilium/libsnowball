@@ -584,7 +584,14 @@ sz_read_context_t::open()
 
   sz_stream_seek(mappings_off, SEEK_SET, stream);
   // Read compound offsets
+  #if __cplusplus >= 201103L
   for (unpacked_compound_t &pack : compounds) {
+  #else
+  compounds_t::iterator iter = compounds.begin();
+  const compounds_t::iterator end = compounds.end();
+  for (; iter != end; ++iter) {
+    unpacked_compound_t &pack = *iter;
+  #endif
     uint32_t offset = 0;
     if (sz_read_prim(stream, &offset)) {
       pop_stack();

@@ -86,6 +86,11 @@ sz_write_context_t::open()
 sz_response_t
 sz_write_context_t::flush()
 {
+  typedef std::vector<
+    sz_bufstring_t,
+    sz_cxx_allocator_t<sz_bufstring_t>
+    > compound_buffers_t;
+
   sz_root_t root = {
     SZ_MAGIC,
     0,
@@ -103,10 +108,18 @@ sz_write_context_t::flush()
     root.num_compounds * uint32_t(sizeof(uint32_t));
 
   // Grab all compound buffers and their combined size
-  std::vector<sz_bufstring_t, sz_cxx_allocator_t<sz_bufstring_t>> compound_buffers(
+  compound_buffers_t compound_buffers(
     (sz_cxx_allocator_t<sz_bufstring_t>(ctx_alloc))
     );
+
+  #if __cplusplus >= 201103L
   for (sz_stream_t *cmp_stream : compound_streams) {
+  #else
+  stream_stack_t::iterator iter = compound_streams.begin();
+  const stream_stack_t::iterator end = compound_streams.end();
+  for (; iter != end; ++iter) {
+    sz_stream_t *cmp_stream = *iter;
+  #endif
     compound_buffers.push_back(sz_buffer_stream_data(cmp_stream));
     compounds_size += compound_buffers.back().size();
   }
@@ -118,14 +131,28 @@ sz_write_context_t::flush()
   SZ_RETURN_IF_ERROR( write_root(root) );
 
   uint32_t relative_offset = uint32_t(sizeof(root) + mappings_size);
+  #if __cplusplus >= 201103L
   for (const sz_bufstring_t &buf : compound_buffers) {
+  #else
+  compound_buffers_t::iterator cmpbuf_iter = compound_buffers.begin();
+  compound_buffers_t::iterator cmpbuf_end = compound_buffers.end();
+  for (; cmpbuf_iter != cmpbuf_end; ++cmpbuf_iter) {
+    const sz_bufstring_t &buf = *cmpbuf_iter;
+  #endif
     if (sz_write_prim(stream, relative_offset)) {
       return file_error();
     }
     relative_offset += uint32_t(buf.size());
   }
 
+  #if __cplusplus >= 201103L
   for (const sz_bufstring_t &buf : compound_buffers) {
+  #else
+  cmpbuf_iter = compound_buffers.begin();
+  cmpbuf_end = compound_buffers.end();
+  for (; cmpbuf_iter != cmpbuf_end; ++cmpbuf_iter) {
+    const sz_bufstring_t &buf = *cmpbuf_iter;
+  #endif
     const size_t write_size = buf.size();
     if (sz_stream_write(buf.data(), write_size, stream) != write_size) {
       return file_error();
@@ -162,7 +189,14 @@ sz_write_context_t::cleanup()
   }
   active = bufstream = NULL;
 
+  #if __cplusplus >= 201103L
   for (sz_stream_t *cmp_stream : compound_streams) {
+  #else
+  stream_stack_t::iterator iter = compound_streams.begin();
+  const stream_stack_t::iterator end = compound_streams.end();
+  for (; iter != end; ++iter) {
+    sz_stream_t *cmp_stream = *iter;
+  #endif
     sz_stream_close(cmp_stream);
   }
 
@@ -285,7 +319,12 @@ sz_write_context_t::write_primitive_array(
 sz_response_t
 sz_write_context_t::write_null_pointer(uint32_t name)
 {
-  return write_header({ SZ_NULL_POINTER_CHUNK, name, sizeof(sz_header_t) });
+  const sz_header_t header = {
+    SZ_NULL_POINTER_CHUNK,
+    name,
+    sizeof(sz_header_t)
+  };
+  return write_header(header);
 }
 
 

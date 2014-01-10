@@ -50,7 +50,7 @@ private:
 
   static const unpacked_compound_t default_unpacked_compound;
 
-  typedef std::vector<off_t, sz_cxx_allocator_t<off_t>> offsets_t;
+  typedef std::vector<off_t, sz_cxx_allocator_t<off_t> > offsets_t;
   typedef std::vector<
     unpacked_compound_t,
     sz_cxx_allocator_t<unpacked_compound_t>
