@@ -47,13 +47,23 @@ static sz_allocator_t default_allocator = {
 };
 
 
+static sz_allocator_t *default_allocator_ptr = &default_allocator;
+
+
 SZ_DEF_BEGIN
 
 
 sz_allocator_t *
 sz_default_allocator()
 {
-  return &default_allocator;
+  return default_allocator_ptr;
+}
+
+
+void
+sz_set_default_allocator(sz_allocator_t *alloc)
+{
+  default_allocator_ptr = alloc ? alloc : &default_allocator;
 }
 
 

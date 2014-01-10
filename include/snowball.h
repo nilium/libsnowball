@@ -328,6 +328,12 @@ SZ_EXPORT
 sz_allocator_t *
 sz_default_allocator();
 
+// Sets the default allocator to alloc. If alloc is NULL, it reverts to the
+// library's default allocator (aka malloc and free).
+SZ_EXPORT
+void
+sz_set_default_allocator(sz_allocator_t *alloc);
+
 SZ_EXPORT
 void
 sz_free(void *ptr, sz_allocator_t *allocator);
