@@ -29,6 +29,9 @@ SZ_DEF_BEGIN
 void
 sz_free(void *ptr, sz_allocator_t *alloc)
 {
+  if (alloc == NULL) {
+    alloc = sz_default_allocator();
+  }
   alloc->free(ptr, alloc);
 }
 
@@ -36,6 +39,9 @@ sz_free(void *ptr, sz_allocator_t *alloc)
 void *
 sz_malloc(size_t size, sz_allocator_t *alloc)
 {
+  if (alloc == NULL) {
+    alloc = sz_default_allocator();
+  }
   return alloc->malloc(size, alloc);
 }
 
