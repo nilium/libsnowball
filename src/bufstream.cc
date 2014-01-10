@@ -149,10 +149,10 @@ off_t
 sz_bufstream_seek(off_t off, int whence, sz_stream_t *stream)
 {
   sz_bufstream_t *bufstream = (sz_bufstream_t *)stream;
-  sz_buffer_t::seekdir dir = sz_buffer_t::seekdir::beg;
+  sz_buffer_t::seekdir dir = sz_buffer_t::beg;
   switch (whence) {
-  case SEEK_CUR: dir = sz_buffer_t::seekdir::cur; break;
-  case SEEK_END: dir = sz_buffer_t::seekdir::end; break;
+  case SEEK_CUR: dir = sz_buffer_t::cur; break;
+  case SEEK_END: dir = sz_buffer_t::end; break;
   case SEEK_SET:
   default: break;
   }
