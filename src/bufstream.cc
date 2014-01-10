@@ -77,7 +77,9 @@ struct SZ_HIDDEN sz_bufstream_t
   void init()
   {
     new (opaque) sz_buffer_t(
+    #if __cplusplus >= 201103L
       sz_bufstring_t(sz_cxx_allocator_t<char>(alloc))
+    #endif
       );
   }
 
