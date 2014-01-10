@@ -24,7 +24,8 @@
 #define __CHUNK_HH__
 
 
-typedef struct s_sz_root {
+typedef struct SZ_HIDDEN s_sz_root
+{
   // magic number -- should be SZ_MAGIC
   uint32_t magic;
   // size of the serializable data including this root
@@ -44,20 +45,23 @@ typedef struct s_sz_root {
 } sz_root_t;
 
 
-typedef struct s_sz_header {
+typedef struct SZ_HIDDEN s_sz_header
+{
   uint32_t kind;  // chunk type
   uint32_t name;  // chunk name
   uint32_t size;  // length including this header
 } sz_header_t;
 
 
-typedef struct s_sz_compound_ref {
+typedef struct SZ_HIDDEN s_sz_compound_ref
+{
   sz_header_t base;
   uint32_t index;
 } sz_compound_ref_t;
 
 
-typedef struct s_sz_array {
+typedef struct SZ_HIDDEN s_sz_array
+{
   sz_header_t base;
   uint32_t length;
   uint32_t type;

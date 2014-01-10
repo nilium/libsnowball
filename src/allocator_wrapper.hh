@@ -31,7 +31,7 @@
 
 
 template <typename T>
-struct sz_cxx_allocator_t
+struct SZ_HIDDEN sz_cxx_allocator_t
 {
 
   template <typename U>

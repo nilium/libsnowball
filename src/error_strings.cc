@@ -23,59 +23,59 @@
 #include "error_strings.hh"
 
 
-const char *const sz_errstr_no_error =
+SZ_HIDDEN const char *const sz_errstr_no_error =
   "No error.";
 
-const char *const sz_errstr_null_context =
+SZ_HIDDEN const char *const sz_errstr_null_context =
   "Null serializer context.";
 
-const char *const sz_errstr_invalid_root =
+SZ_HIDDEN const char *const sz_errstr_invalid_root =
   "Invalid magic number for root.";
 
-const char *const sz_errstr_invalid_magic_head =
+SZ_HIDDEN const char *const sz_errstr_invalid_magic_head =
   "First two bytes of the magic number for the stream are invalid.";
 
-const char *const sz_errstr_invalid_magic_version =
+SZ_HIDDEN const char *const sz_errstr_invalid_magic_version =
   "The version of this snowball is not supported.";
 
-const char *const sz_errstr_wrong_kind =
+SZ_HIDDEN const char *const sz_errstr_wrong_kind =
   "Invalid chunk header: wrong chunk kind.";
 
-const char *const sz_errstr_bad_name =
+SZ_HIDDEN const char *const sz_errstr_bad_name =
   "Invalid chunk header: wrong chunk name.";
 
-const char *const sz_errstr_cannot_read =
+SZ_HIDDEN const char *const sz_errstr_cannot_read =
   "Unable to read from stream.";
 
-const char *const sz_errstr_cannot_write =
+SZ_HIDDEN const char *const sz_errstr_cannot_write =
   "Unable to write to stream.";
 
-const char *const sz_errstr_eof =
+SZ_HIDDEN const char *const sz_errstr_eof =
   "Unexpected end of stream reached.";
 
-const char *const sz_errstr_write_on_read =
+SZ_HIDDEN const char *const sz_errstr_write_on_read =
   "Cannot perform write operation on read-serializer.";
 
-const char *const sz_errstr_read_on_write =
+SZ_HIDDEN const char *const sz_errstr_read_on_write =
   "Cannot perform read operation on write-serializer.";
 
-const char *const sz_errstr_compound_reader_null =
+SZ_HIDDEN const char *const sz_errstr_compound_reader_null =
   "Failed to deserialize compound object with reader: reader returned NULL.";
 
-const char *const sz_errstr_already_closed =
+SZ_HIDDEN const char *const sz_errstr_already_closed =
   "Cannot close serializer that isn't open.";
 
-const char *const sz_errstr_already_open =
+SZ_HIDDEN const char *const sz_errstr_already_open =
   "Invalid operation on open context.";
 
-const char *const sz_errstr_open_set_stream =
+SZ_HIDDEN const char *const sz_errstr_open_set_stream =
   "Cannot set stream for open serializer.";
 
-const char *const sz_errstr_null_stream =
+SZ_HIDDEN const char *const sz_errstr_null_stream =
   "Stream is NULL.";
 
-const char *const sz_errstr_empty_array =
+SZ_HIDDEN const char *const sz_errstr_empty_array =
   "Array is empty.";
 
-const char *const sz_errstr_nomem =
+SZ_HIDDEN const char *const sz_errstr_nomem =
   "Allocation failed.";

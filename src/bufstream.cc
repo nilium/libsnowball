@@ -62,7 +62,7 @@ void
 sz_bufstream_close(sz_stream_t *stream);
 
 
-struct sz_bufstream_t
+struct SZ_HIDDEN sz_bufstream_t
 {
   sz_stream_t base;
   sz_allocator_t *alloc;

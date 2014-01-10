@@ -25,7 +25,7 @@
 #include <cstdio>
 
 
-struct sz_fstream_t
+struct SZ_HIDDEN sz_fstream_t
 {
   sz_stream_t base;
 
@@ -59,7 +59,7 @@ void
 sz_fstream_close(sz_stream_t *stream);
 
 
-sz_stream_t sz_fstream_base = {
+static sz_stream_t sz_fstream_base = {
   sz_fstream_read,
   sz_fstream_write,
   sz_fstream_seek,
