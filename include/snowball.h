@@ -236,39 +236,6 @@ typedef void (sz_compound_reader_fn_t)(
   );
 
 
-/*
-struct s_sz_context {
-  sz_allocator_t alloc;
-
-  const char *error;
-
-  int mode;
-  int open;
-  int compound_level;
-
-  sz_stream_t *stream;
-  off_t stream_pos;
-
-  sz_stream_t *active;
-
-  // writing: map of compounds in use to their indices
-  map_t compound_ptrs;
-  // stack that operates differently when reading and writing
-  // writing: stack of active buffers
-  // reading: stack of off_t locations in the stream
-  array_t stack;
-  // compound pointers
-  // writing: pointers to buffers of compounds
-  // reading: pointers to file offsets of compounds and their unpacked pointers
-  array_t compounds;
-  // output buffer
-  // unused in reading
-  buffer_t buffer;
-  sz_stream_t *buffer_stream;
-};
-*/
-
-
 typedef struct s_sz_allocator sz_allocator_t;
 
 
