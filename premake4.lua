@@ -1,11 +1,16 @@
 
 solution "snowball"
-configurations { "Debug-Static", "Release-Static", "Debug-Shared", "Release-Shared" }
+configurations {
+  "Debug-Static",
+  "Release-Static",
+  "Debug-Shared",
+  "Release-Shared"
+}
 
 newoption {
-  trigger       = "c++11",
-  description   = "Enables compilation with c++11 -- uses libc++ instead\n"..
-"                   of libstdc++ as the stdlib"
+  trigger       = "c++98",
+  description   = "Disables compilation with c++11 -- uses libstdc++\n"..
+"                   in place of libc++ and compiles as C++98."
 }
 
 project "snowball"
@@ -18,7 +23,7 @@ language "C++"
 
   flags { "ExtraWarnings" }
 
-  configuration "c++11"
+  configuration "not c++98"
     buildoptions { "-std=c++11", "-stdlib=libc++" }
 
   configuration "Debug-*"
