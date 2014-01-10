@@ -353,6 +353,11 @@ sz_write_context_t::store_compound(
     return 0;
   }
 
+  const compound_map_t::iterator found = compound_indices.find(compound);
+  if (found != compound_indices.end()) {
+    return found->second;
+  }
+
   index = new_compound(compound);
 
   push_stack();
