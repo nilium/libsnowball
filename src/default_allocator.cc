@@ -23,12 +23,16 @@
 #include <snowball.h>
 
 
+static void *(*sz_malloc_fn)(size_t) = malloc;
+static void (*sz_free_fn)(void *) = free;
+
+
 static
 void *
 sz_default_malloc(size_t sz, sz_allocator_t *alloc)
 {
   (void)alloc;
-  return malloc(sz);
+  return sz_malloc_fn(sz);
 }
 
 
@@ -37,7 +41,7 @@ void
 sz_default_free(void *ptr, sz_allocator_t *alloc)
 {
   (void)alloc;
-  free(ptr);
+  sz_free_fn(ptr);
 }
 
 
@@ -64,6 +68,14 @@ void
 sz_set_default_allocator(sz_allocator_t *alloc)
 {
   default_allocator_ptr = alloc ? alloc : &default_allocator;
+}
+
+
+void
+sz_set_default_malloc_free(void *(*malloc_)(size_t), void (*free_)(void *))
+{
+  sz_malloc_fn = malloc_ ? malloc_ : malloc;
+  sz_free_fn = free_ ? free_ : free;
 }
 
 

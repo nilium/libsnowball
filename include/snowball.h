@@ -329,6 +329,10 @@ sz_set_default_allocator(sz_allocator_t *alloc);
 
 SZ_EXPORT
 void
+sz_set_default_malloc_free(void *(*malloc_)(size_t), void (*free_)(void *));
+
+SZ_EXPORT
+void
 sz_free(void *ptr, sz_allocator_t *allocator);
 
 SZ_EXPORT
