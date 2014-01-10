@@ -26,6 +26,14 @@
 
 #include <snowball.h>
 #include <string>
+#include "allocator_wrapper.hh"
+
+
+typedef std::basic_string<
+  char,
+  std::char_traits<char>,
+  sz_cxx_allocator_t<char>
+  > sz_bufstring_t;
 
 
 // Returns a sz-stream backed by a stringstream. The underlying buffer
@@ -35,7 +43,7 @@ sz_buffer_stream(sz_mode_t mode, sz_allocator_t *alloc);
 
 // Returns the underlying string for the stream.
 SZ_HIDDEN
-std::string
+sz_bufstring_t
 sz_buffer_stream_data(sz_stream_t *stream);
 
 

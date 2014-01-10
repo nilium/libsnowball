@@ -57,8 +57,8 @@ sz_read_context_t::default_unpacked_compound = {
 
 sz_read_context_t::sz_read_context_t(sz_allocator_t *alloc)
 : s_sz_context(alloc)
-, compounds()
-, offsets()
+, compounds(sz_cxx_allocator_t<unpacked_compound_t>(alloc))
+, offsets(sz_cxx_allocator_t<off_t>(alloc))
 , is_open(false)
 {
   /* nop */

@@ -26,6 +26,7 @@
 
 #include "context.hh"
 #include "chunk.hh"
+#include "allocator_wrapper.hh"
 
 #include <map>
 #include <vector>
@@ -33,8 +34,13 @@
 struct SZ_HIDDEN sz_write_context_t : public s_sz_context
 {
 private:
-  typedef std::vector<sz_stream_t *> stream_stack_t;
-  typedef std::map<void *, uint32_t> compound_map_t;
+  typedef std::less<void *> void_comp_t;
+  typedef sz_cxx_allocator_t<sz_stream_t *> stream_stack_alloc_t;
+  typedef sz_cxx_allocator_t<std::pair<void *, uint32_t>> compound_map_alloc_t;
+  typedef std::vector<sz_stream_t *, stream_stack_alloc_t> stream_stack_t;
+  typedef std::map<void *, uint32_t, void_comp_t, compound_map_alloc_t> compound_map_t;
+
+  static void_comp_t void_comp;
 
   sz_stream_t *bufstream;
   sz_stream_t *active;

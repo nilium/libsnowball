@@ -26,6 +26,9 @@
 #include "bufstream.hh"
 
 
+sz_write_context_t::void_comp_t sz_write_context_t::void_comp;
+
+
 // Writes an arbitrary type val to a stream and returns false on success, or
 // true on failure. Should only be used for small-ish POD types.
 // For those wondering why false is the successful case, it's so you can just
@@ -41,8 +44,11 @@ sz_write_prim(sz_stream_t *stream, T val)
 
 sz_write_context_t::sz_write_context_t(sz_allocator_t *alloc)
 : s_sz_context(alloc)
-, streams()
-, compound_streams()
+, bufstream(NULL)
+, active(NULL)
+, streams(stream_stack_alloc_t(alloc))
+, compound_streams(stream_stack_alloc_t(alloc))
+, compound_indices(void_comp, compound_map_alloc_t(alloc))
 {
   /* nop */
 }
@@ -89,7 +95,7 @@ sz_write_context_t::flush()
     ~0U
   };
 
-  const std::string main_buf = sz_buffer_stream_data(bufstream);
+  const sz_bufstring_t main_buf = sz_buffer_stream_data(bufstream);
   const size_t data_size = main_buf.size();
 
   uint32_t compounds_size = 0;
@@ -97,7 +103,9 @@ sz_write_context_t::flush()
     root.num_compounds * uint32_t(sizeof(uint32_t));
 
   // Grab all compound buffers and their combined size
-  std::vector<std::string> compound_buffers;
+  std::vector<sz_bufstring_t, sz_cxx_allocator_t<sz_bufstring_t>> compound_buffers(
+    (sz_cxx_allocator_t<sz_bufstring_t>(ctx_alloc))
+    );
   for (sz_stream_t *cmp_stream : compound_streams) {
     compound_buffers.push_back(sz_buffer_stream_data(cmp_stream));
     compounds_size += compound_buffers.back().size();
@@ -110,14 +118,14 @@ sz_write_context_t::flush()
   SZ_RETURN_IF_ERROR( write_root(root) );
 
   uint32_t relative_offset = uint32_t(sizeof(root) + mappings_size);
-  for (const std::string &buf : compound_buffers) {
+  for (const sz_bufstring_t &buf : compound_buffers) {
     if (sz_write_prim(stream, relative_offset)) {
       return file_error();
     }
     relative_offset += uint32_t(buf.size());
   }
 
-  for (const std::string &buf : compound_buffers) {
+  for (const sz_bufstring_t &buf : compound_buffers) {
     const size_t write_size = buf.size();
     if (sz_stream_write(buf.data(), write_size, stream) != write_size) {
       return file_error();

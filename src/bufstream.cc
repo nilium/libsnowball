@@ -25,7 +25,16 @@
 #include <sstream>
 
 
-typedef std::stringstream sz_buffer_t;
+typedef std::basic_stringstream<
+#if __cplusplus >= 201103L
+  char,
+  std::char_traits<char>,
+  sz_cxx_allocator_t<char>
+#else
+  char,
+  std::char_traits<char>
+#endif
+  > sz_buffer_t;
 
 
 static
@@ -67,7 +76,9 @@ struct sz_bufstream_t
 
   void init()
   {
-    new (opaque) sz_buffer_t;
+    new (opaque) sz_buffer_t(
+      sz_bufstring_t(sz_cxx_allocator_t<char>(alloc))
+      );
   }
 
   void finalize()
@@ -97,7 +108,7 @@ sz_buffer_stream(sz_mode_t mode, sz_allocator_t *alloc)
 }
 
 
-std::string
+sz_bufstring_t
 sz_buffer_stream_data(sz_stream_t *stream)
 {
   return ((sz_bufstream_t *)stream)->buffer()->str();
