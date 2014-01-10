@@ -633,8 +633,8 @@ SZ_DEF_BEGIN
 
 sz_response_t
 sz_read_compound(
-  sz_context_t *ctx,
   void **compound,
+  sz_context_t *ctx,
   uint32_t name,
   sz_compound_reader_fn_t *reader,
   void *reader_ctx
@@ -652,10 +652,10 @@ sz_read_compound(
 
 sz_response_t
 sz_read_compounds(
-  sz_context_t *ctx,
-  uint32_t name,
   void ***compounds,
   size_t *length,
+  sz_context_t *ctx,
+  uint32_t name,
   sz_compound_reader_fn_t *reader,
   void *reader_ctx,
   sz_allocator_t *buf_alloc
@@ -675,10 +675,10 @@ sz_read_compounds(
 
 sz_response_t
 sz_read_bytes(
-  sz_context_t *ctx,
-  uint32_t name,
   void **out,
   size_t *length,
+  sz_context_t *ctx,
+  uint32_t name,
   sz_allocator_t *buf_alloc
   )
 {
@@ -687,7 +687,7 @@ sz_read_bytes(
 
 
 sz_response_t
-sz_read_float(sz_context_t *ctx, uint32_t name, float *out)
+sz_read_float(float *out, sz_context_t *ctx, uint32_t name)
 {
   float result;
   sz_response_t response;
@@ -696,16 +696,20 @@ sz_read_float(sz_context_t *ctx, uint32_t name, float *out)
     ->read_primitive(&result, SZ_FLOAT_CHUNK, sizeof(result), name);
   SZ_RETURN_IF_ERROR(response);
 
+  if (out) {
+    *out = result;
+  }
+
   return SZ_SUCCESS;
 }
 
 
 sz_response_t
 sz_read_floats(
-  sz_context_t *ctx,
-  uint32_t name,
   float **out,
   size_t *length,
+  sz_context_t *ctx,
+  uint32_t name,
   sz_allocator_t *buf_alloc
   )
 {
@@ -722,7 +726,7 @@ sz_read_floats(
 
 
 sz_response_t
-sz_read_int(sz_context_t *ctx, uint32_t name, int32_t *out)
+sz_read_int(int32_t *out, sz_context_t *ctx, uint32_t name)
 {
   int32_t result;
   sz_response_t response;
@@ -731,16 +735,20 @@ sz_read_int(sz_context_t *ctx, uint32_t name, int32_t *out)
     ->read_primitive(&result, SZ_SINT32_CHUNK, sizeof(result), name);
   SZ_RETURN_IF_ERROR(response);
 
+  if (out) {
+    *out = result;
+  }
+
   return SZ_SUCCESS;
 }
 
 
 sz_response_t
 sz_read_ints(
-  sz_context_t *ctx,
-  uint32_t name,
   int32_t **out,
   size_t *length,
+  sz_context_t *ctx,
+  uint32_t name,
   sz_allocator_t *buf_alloc
   )
 {
@@ -758,7 +766,7 @@ sz_read_ints(
 
 
 sz_response_t
-sz_read_unsigned_int(sz_context_t *ctx, uint32_t name, uint32_t *out)
+sz_read_unsigned_int(uint32_t *out, sz_context_t *ctx, uint32_t name)
 {
   uint32_t result;
   sz_response_t response;
@@ -767,16 +775,20 @@ sz_read_unsigned_int(sz_context_t *ctx, uint32_t name, uint32_t *out)
     ->read_primitive(&result, SZ_UINT32_CHUNK, sizeof(result), name);
   SZ_RETURN_IF_ERROR(response);
 
+  if (out) {
+    *out = result;
+  }
+
   return SZ_SUCCESS;
 }
 
 
 sz_response_t
 sz_read_unsigned_ints(
-  sz_context_t *ctx,
-  uint32_t name,
   uint32_t **out,
   size_t *length,
+  sz_context_t *ctx,
+  uint32_t name,
   sz_allocator_t *buf_alloc
   )
 {

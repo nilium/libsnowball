@@ -439,11 +439,12 @@ SZ_DEF_BEGIN
 
 sz_response_t
 sz_write_compound(
+  void *compound,
   sz_context_t *ctx,
   uint32_t name,
-  void *compound,
   sz_compound_writer_fn_t *writer,
-  void *writer_ctx)
+  void *writer_ctx
+  )
 {
   SZ_AS_WRITER(ctx, return)->write_compound(compound, writer, writer_ctx, name);
 }
@@ -451,10 +452,10 @@ sz_write_compound(
 
 sz_response_t
 sz_write_compounds(
-  sz_context_t *ctx,
-  uint32_t name,
   void **compounds,
   size_t length,
+  sz_context_t *ctx,
+  uint32_t name,
   sz_compound_writer_fn_t *writer,
   void *writer_ctx
   )
@@ -471,10 +472,10 @@ sz_write_compounds(
 
 sz_response_t
 sz_write_bytes(
-  sz_context_t *ctx,
-  uint32_t name,
   const void *values,
-  size_t length
+  size_t length,
+  sz_context_t *ctx,
+  uint32_t name
   )
 {
   SZ_AS_WRITER(ctx, return)->write_primitive(
@@ -487,7 +488,7 @@ sz_write_bytes(
 
 
 sz_response_t
-sz_write_float(sz_context_t *ctx, uint32_t name, float value)
+sz_write_float(float value, sz_context_t *ctx, uint32_t name)
 {
   SZ_AS_WRITER(ctx, return)->write_primitive(
     &value,
@@ -500,10 +501,10 @@ sz_write_float(sz_context_t *ctx, uint32_t name, float value)
 
 sz_response_t
 sz_write_floats(
-  sz_context_t *ctx,
-  uint32_t name,
   float *values,
-  size_t length
+  size_t length,
+  sz_context_t *ctx,
+  uint32_t name
   )
 {
   SZ_AS_WRITER(ctx, return)->write_primitive_array(
@@ -517,7 +518,7 @@ sz_write_floats(
 
 
 sz_response_t
-sz_write_int(sz_context_t *ctx, uint32_t name, int32_t value)
+sz_write_int(int32_t value, sz_context_t *ctx, uint32_t name)
 {
   SZ_AS_WRITER(ctx, return)->write_primitive(
     &value,
@@ -530,10 +531,10 @@ sz_write_int(sz_context_t *ctx, uint32_t name, int32_t value)
 
 sz_response_t
 sz_write_ints(
-  sz_context_t *ctx,
-  uint32_t name,
   int32_t *values,
-  size_t length
+  size_t length,
+  sz_context_t *ctx,
+  uint32_t name
   )
 {
   SZ_AS_WRITER(ctx, return)->write_primitive_array(
@@ -547,7 +548,7 @@ sz_write_ints(
 
 
 sz_response_t
-sz_write_unsigned_int(sz_context_t *ctx, uint32_t name, uint32_t value)
+sz_write_unsigned_int(uint32_t value, sz_context_t *ctx, uint32_t name)
 {
   SZ_AS_WRITER(ctx, return)->write_primitive(
     &value,
@@ -560,10 +561,10 @@ sz_write_unsigned_int(sz_context_t *ctx, uint32_t name, uint32_t value)
 
 sz_response_t
 sz_write_unsigned_ints(
-  sz_context_t *ctx,
-  uint32_t name,
   uint32_t *values,
-  size_t length
+  size_t length,
+  sz_context_t *ctx,
+  uint32_t name
   )
 {
   SZ_AS_WRITER(ctx, return)->write_primitive_array(
