@@ -162,8 +162,8 @@ sz_read_context_t::read_array_header(
 
   if (res.base.kind == SZ_NULL_POINTER_CHUNK) {
     return SZ_SUCCESS;
-  }else if (   sz_read_prim(stream, &res.length)
-            || sz_read_prim(stream, &res.type)) {
+  } else if (   sz_read_prim(stream, &res.length)
+             || sz_read_prim(stream, &res.type)) {
     return file_error();
   }
 
