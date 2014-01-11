@@ -128,9 +128,12 @@ sz_write_context_t::flush()
   root.data_offset = root.compounds_offset + compounds_size;
   root.size = root.data_offset + data_size;
 
+  // Write the file root
   SZ_RETURN_IF_ERROR( write_root(root) );
 
-  uint32_t relative_offset = uint32_t(sizeof(root) + mappings_size);
+  // Write the mappings table
+  // Offset relative to the beginning of the compounds table
+  uint32_t relative_offset = 0;
   #if __cplusplus >= 201103L
   for (const sz_bufstring_t &buf : compound_buffers) {
   #else
@@ -145,6 +148,7 @@ sz_write_context_t::flush()
     relative_offset += uint32_t(buf.size());
   }
 
+  // Write compounds
   #if __cplusplus >= 201103L
   for (const sz_bufstring_t &buf : compound_buffers) {
   #else
@@ -159,6 +163,7 @@ sz_write_context_t::flush()
     }
   }
 
+  // Write the main data
   if (   data_size
       && sz_stream_write(main_buf.data(), data_size, stream) != data_size) {
     return file_error();
