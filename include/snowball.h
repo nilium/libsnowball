@@ -609,6 +609,11 @@ sz_stream_fopen(const char *filename, sz_mode_t mode, sz_allocator_t *alloc);
 
   Returns a stream that does nothing and always fails to read/write/seek.
   Handy for testing, occasionally.
+
+  @note
+    The same pointer is always returned by sz_stream_null(), so it's imperative
+    that you do not modify the returned stream.
+
   @return
     A stream that's the functional equivalent of reading from/writing to
   `/dev/null`.
