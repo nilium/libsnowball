@@ -102,7 +102,7 @@ size_t
 sz_fstream_read(void *out, size_t length, sz_stream_t *stream)
 {
   sz_fstream_t *fstream = (sz_fstream_t *)stream;
-  return fread(out, length, 1, fstream->file);
+  return fread(out, length, 1, fstream->file) * length;
 }
 
 
@@ -111,7 +111,7 @@ size_t
 sz_fstream_write(const void *in, size_t length, sz_stream_t *stream)
 {
   sz_fstream_t *fstream = (sz_fstream_t *)stream;
-  return fwrite(in, length, 1, fstream->file);
+  return fwrite(in, length, 1, fstream->file) * length;
 }
 
 
