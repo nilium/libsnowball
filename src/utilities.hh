@@ -64,7 +64,7 @@
 
 
 #define SZ_AS_READER(CTX, PREFIX)                             \
-  SZ_RETURN_IF_ERROR(sz_check_context((CTX), SZ_WRITER));     \
+  SZ_RETURN_IF_ERROR(sz_check_context((CTX), SZ_READER));     \
   PREFIX (static_cast<sz_read_context_t *>((CTX)))
 
 
