@@ -693,12 +693,37 @@ SZ_EXPORT
 off_t
 sz_stream_tell(sz_stream_t *stream);
 
-//! Returns whether a stream is at its EOF (or something equivalent).
+/*!
+  @brief Returns whether a stream is at its EOF (or something equivalent).
+
+  Returns whether the stream is at its EOF or has reached something equivalent
+  to an EOF for it. Streams are not required to check for this, as it is only
+  used for error handling when a read or write fails, allowing a specific
+  error for reaching an EOF while reading or writing.
+
+  @param stream
+    A stream to check.
+  @return Non-zero if the stream is at EOF, otherwise zero.
+*/
 SZ_EXPORT
 int
 sz_stream_eof(sz_stream_t *stream);
 
-//! Closes a stream and deallocates any memory in use by it.
+/*!
+  @brief Closes a stream and deallocates any memory in use by it.
+
+  Closes a stream. This does three things: unwritten buffered data in the
+  stream is flushed, the stream is closed, and all resources associated with
+  the stream are released including the stream itself. So, for example,
+  with a file stream, this closes the file and deallocates the stream.
+
+  For some streams, this is a nop (e.g., the stream returned by
+  sz_stream_null() does nothing when closing, as the same stream is returned
+  every time).
+
+  @param stream
+    A stream to close.
+*/
 SZ_EXPORT
 void
 sz_stream_close(sz_stream_t *stream);
