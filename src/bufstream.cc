@@ -135,7 +135,7 @@ size_t
 sz_bufstream_write(const void *in, size_t length, sz_stream_t *stream)
 {
   sz_bufstream_t *bufstream = (sz_bufstream_t *)stream;
-  if (bufstream->mode == SZ_READER) {
+  if (bufstream->mode == SZ_WRITER) {
     off_t offset = bufstream->buffer()->tellp();
     bufstream->buffer()->write((const char *)in, length);
     return size_t(bufstream->buffer()->tellp() - offset);
