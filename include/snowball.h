@@ -437,12 +437,12 @@ typedef void (sz_compound_writer_fn_t)(
 
   @remarks
     When the reader is called, the output pointer, compound, is only guaranteed
-    to be valid before any other calls are made to the serializer. Second, the
-    only way to deal with semi-circular references is to allocate, write the
-    compound pointer out, and continue reading the contents of the compound only
-    afterward. Otherwise, any compounds referencing the compound being read will
-    receive a NULL pointer and no further attempts will be made to unpack the
-    compound.
+    to be valid before any other compound reader calls are made to the
+    serializer. Second, the only way to deal with semi-circular references is
+    to allocate, write the compound pointer out, and continue reading the
+    contents of the compound only afterward. Otherwise, any compounds that
+    reference the compound being read will receive a NULL pointer and further
+    attempts will not be made to unpack the compound.
 
   @remarks
     So, an example function might look like:
