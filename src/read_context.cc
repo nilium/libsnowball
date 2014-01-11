@@ -428,7 +428,7 @@ sz_read_context_t::read_compound(
     sz_read_compound_error
     );
 
-  if (header.kind == SZ_NULL_POINTER_CHUNK) {
+  if (header.kind != SZ_NULL_POINTER_CHUNK) {
     uint32_t compound_index = 0;
 
     if (sz_read_prim(stream, &compound_index)) {
