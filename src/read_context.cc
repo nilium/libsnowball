@@ -533,7 +533,7 @@ sz_read_context_t::get_compound(
 
   unpacked_compound_t &pack = compounds[index - 1];
 
-  if (pack.value == NULL) {
+  if (!pack.unpacked) {
     push_stack();
     sz_stream_seek(pack.offset, SEEK_SET, stream);
     pack.unpacked = true;
