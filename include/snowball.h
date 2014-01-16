@@ -139,7 +139,7 @@ SZ_DEF_END
 //! @brief Major version number of libsnowball.
 #define SZ_VERSION_MAJOR      1
 //! @brief Minor version number of libsnowball.
-#define SZ_VERSION_MINOR      0
+#define SZ_VERSION_MINOR      1
 //! @brief Reivsion number of libsnowball.
 #define SZ_VERSION_REVISION   0
 
