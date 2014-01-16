@@ -29,11 +29,42 @@
 // you'll want to provide T yourself). Returns false on success, true if an
 // error occurred.
 template <typename T>
-static
+SZ_HIDDEN
 bool
 sz_read_prim(sz_stream_t *stream, T *out)
 {
   T result = T();
+
+  if (sz_stream_read(&result, sizeof(result), stream) == sizeof(result)) {
+
+#if SZ_ENDIANNESS != SZ_BASE_ENDIANNESS
+    T swapout = T(result);
+    uint8_t *out = (uint8_t *)&result;
+    const uint8_t *in = (const uint8_t *)&swapout;
+    for (size_t i = 0; i < sizeof(T); ++i) {
+      out[(sizeof(T) - 1) - i] = in[i];
+    }
+#endif
+
+    if (out) {
+      *out = result;
+    }
+
+    return false;
+  }
+
+  return true;
+}
+
+
+#if SZ_ENDIANNESS != SZ_BASE_ENDIANNESS
+
+template <>
+SZ_HIDDEN
+bool
+sz_read_prim(sz_stream_t *stream, int8_t *out)
+{
+  int8_t result = 0;
 
   if (sz_stream_read(&result, sizeof(result), stream) == sizeof(result)) {
     if (out) {
@@ -45,6 +76,73 @@ sz_read_prim(sz_stream_t *stream, T *out)
 
   return true;
 }
+
+template <>
+SZ_HIDDEN
+bool
+sz_read_prim(sz_stream_t *stream, uint8_t *out)
+{
+  uint8_t result = 0;
+
+  if (sz_stream_read(&result, sizeof(result), stream) == sizeof(result)) {
+    if (out) {
+      *out = result;
+    }
+
+    return false;
+  }
+
+  return true;
+}
+
+
+template <>
+SZ_HIDDEN
+bool
+sz_read_prim(sz_stream_t *stream, uint32_t *out)
+{
+  uint32_t result = 0;
+
+  if (sz_stream_read(&result, sizeof(result), stream) == sizeof(result)) {
+    if (out) {
+      *out = sz_htonl(result);
+    }
+
+    return false;
+  }
+
+  return true;
+}
+
+
+template <>
+SZ_HIDDEN
+bool
+sz_read_prim(sz_stream_t *stream, int32_t *out)
+{
+  uint32_t result = 0;
+  bool r = sz_read_prim(stream, &result);
+  if (r && out) {
+    *out = *(int32_t *)&result;
+  }
+  return r;
+}
+
+
+template <>
+SZ_HIDDEN
+bool
+sz_read_prim(sz_stream_t *stream, float *out)
+{
+  uint32_t result = 0;
+  bool r = sz_read_prim(stream, &result);
+  if (r && out) {
+    *out = *(float *)&result;
+  }
+  return r;
+}
+
+#endif
 
 
 const sz_read_context_t::unpacked_compound_t
@@ -239,6 +337,27 @@ sz_read_context_t::read_array_body(
       goto sz_read_array_body_done;
     }
 
+#if SZ_ENDIANNESS != SZ_BASE_ENDIANNESS
+    switch (chunk->type) {
+    case SZ_UINT32_CHUNK:
+    case SZ_SINT32_CHUNK:
+    case SZ_FLOAT_CHUNK:
+    case SZ_COMPOUND_REF_CHUNK: {
+      uint32_t *data = (uint32_t *)buffer;
+      const uint32_t *const data_end = data + arr_length;
+      for (; data < data_end; ++data) {
+        *data = sz_htonl(*data);
+      }
+    } break;
+
+    default:
+      sz_free(buffer, alloc);
+      response = SZ_ERROR_INVALID_OPERATION;
+      error = sz_errstr_wrong_kind;
+      goto sz_read_array_body_done;
+    }
+#endif
+
     *buf_out = buffer;
   } else {
     error = sz_errstr_cannot_read;
@@ -400,6 +519,19 @@ sz_read_context_t::read_primitive(
     response = SZ_ERROR_BAD_NAME;
     goto sz_read_primitive_error;
   }
+
+#if SZ_ENDIANNESS != SZ_BASE_ENDIANNESS
+  if (out && type_size > 1) {
+    switch (type_size) {
+    case 2: *(uint16_t *)out = sz_htons(*(uint16_t *)out); break;
+    case 4: *(uint32_t *)out = sz_htonl(*(uint32_t *)out); break;
+    default:
+      error = sz_errstr_wrong_kind;
+      response = SZ_ERROR_INVALID_OPERATION;
+      goto sz_read_primitive_error;
+    }
+  }
+#endif
 
   return SZ_SUCCESS;
 

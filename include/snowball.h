@@ -147,6 +147,45 @@ SZ_DEF_END
 SZ_DEF_BEGIN
 
 
+#define SZ_BIG_ENDIAN    1
+#define SZ_LITTLE_ENDIAN 0
+// The endianness used by snowball files. By default, uses little endian,
+// because that's the usual endianness client-side.
+#ifndef SZ_BASE_ENDIANNESS
+# define SZ_BASE_ENDIANNESS SZ_LITTLE_ENDIAN
+#endif
+// mixed/pdp endianness not supported and probably never will be
+
+// Host endianness.
+// Little endian by default, as big endian isn't used anywhere I use snowball.
+// It might be worthwhile to later replace this with something inserted at
+// compile time or a configuration stage.
+#ifndef SZ_ENDIANNESS
+# define SZ_ENDIANNESS SZ_LITTLE_ENDIAN
+#endif
+
+#if SZ_ENDIANNESS != SZ_BASE_ENDIANNESS
+
+SZ_EXPORT
+uint32_t
+sz_ntohl(uint32_t i);
+
+SZ_EXPORT
+uint16_t
+sz_ntohs(uint16_t i);
+
+# define sz_htonl(i) sz_ntohl((i))
+# define sz_htons(i) sz_ntohs((i))
+
+#else
+// Base endianness is host endianness
+# define sz_ntohl(i) (i)
+# define sz_ntohs(i) (i)
+# define sz_htonl(i) (i)
+# define sz_htons(i) (i)
+#endif
+
+
 //! @brief Magic number type. Intended for use as a uint32_t.
 typedef enum e_sz_magic SZ_TYPE_ENUM(uint32_t)
 {

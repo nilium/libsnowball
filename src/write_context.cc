@@ -34,12 +34,96 @@ sz_write_context_t::void_comp_t sz_write_context_t::void_comp;
 // For those wondering why false is the successful case, it's so you can just
 // do `if (write) then_error;`
 template <typename T>
-static
+SZ_HIDDEN
 bool
 sz_write_prim(sz_stream_t *stream, T val)
 {
+#if SZ_ENDIANNESS != SZ_BASE_ENDIANNESS
+  T reversed;
+  uint8_t *out = (uint8_t *)&reversed;
+  const uint8_t *in = (const uint8_t *)&val;
+  for (size_t i = 0; i < sizeof(T); ++i) {
+    out[(sizeof(T) - 1) - i] = in[i];
+  }
+  return sz_stream_write(&reversed, sizeof(reversed), stream) != sizeof(reversed);
+#else
+  return sz_stream_write(&val, sizeof(val), stream) != sizeof(val);
+#endif
+}
+
+
+#if SZ_ENDIANNESS != SZ_BASE_ENDIANNESS
+
+// Specializations for non-little-endian systems.
+
+template <>
+SZ_HIDDEN
+bool
+sz_write_prim<float>(sz_stream_t *stream, float val)
+{
+  uint32_t cv = sz_ntohl(*(const uint32_t *)&val);
+  return sz_stream_write(&cv, sizeof(cv), stream) != sizeof(cv);
+}
+
+
+template <>
+SZ_HIDDEN
+bool
+sz_write_prim<uint8_t>(sz_stream_t *stream, uint8_t val)
+{
   return sz_stream_write(&val, sizeof(val), stream) != sizeof(val);
 }
+
+
+template <>
+SZ_HIDDEN
+bool
+sz_write_prim<int8_t>(sz_stream_t *stream, int8_t val)
+{
+  return sz_stream_write(&val, sizeof(val), stream) != sizeof(val);
+}
+
+
+template <>
+SZ_HIDDEN
+bool
+sz_write_prim<int32_t>(sz_stream_t *stream, int32_t val)
+{
+  uint32_t cv = sz_ntohl(*(const uint32_t *)&val);
+  return sz_stream_write(&cv, sizeof(cv), stream) != sizeof(cv);
+}
+
+
+template <>
+SZ_HIDDEN
+bool
+sz_write_prim<uint32_t>(sz_stream_t *stream, uint32_t val)
+{
+  val = sz_ntohl(val);
+  return sz_stream_write(&val, sizeof(val), stream) != sizeof(val);
+}
+
+
+template <>
+SZ_HIDDEN
+bool
+sz_write_prim<int16_t>(sz_stream_t *stream, int16_t val)
+{
+  uint16_t cv = sz_ntohs(*(const uint16_t *)&val);
+  return sz_stream_write(&cv, sizeof(cv), stream) != sizeof(cv);
+}
+
+
+template <>
+SZ_HIDDEN
+bool
+sz_write_prim<uint16_t>(sz_stream_t *stream, uint16_t val)
+{
+  val = sz_ntohs(val);
+  return sz_stream_write(&val, sizeof(val), stream) != sizeof(val);
+}
+
+#endif
 
 
 sz_write_context_t::sz_write_context_t(sz_allocator_t *alloc)
@@ -274,7 +358,19 @@ sz_write_context_t::write_primitive(
 
   SZ_RETURN_IF_ERROR( write_header(header) );
 
-  if (sz_stream_write(input, type_size, active) != type_size) {
+  bool r = false;
+
+  switch (type_size) {
+    case 1: r = sz_write_prim(active, *(const uint8_t *)input); break;
+    case 2: r = sz_write_prim(active, *(const uint16_t *)input); break;
+    case 4: r = sz_write_prim(active, *(const uint32_t *)input); break;
+
+    default:
+      error = sz_errstr_wrong_kind;
+      return SZ_ERROR_INVALID_OPERATION;
+  }
+
+  if (r) {
     return file_error();
   }
 
@@ -312,10 +408,42 @@ sz_write_context_t::write_primitive_array(
   SZ_RETURN_IF_ERROR( write_header(header.base) );
 
   if (   sz_write_prim(active, header.length)
-      || sz_write_prim(active, header.type)
-      || sz_stream_write(input, data_size, active) != data_size) {
+      || sz_write_prim(active, header.type)) {
     return file_error();
   }
+
+#if SZ_ENDIANNESS != SZ_BASE_ENDIANNESS
+
+  bool r = false;
+  // If the host endianness is not the base endianness, swap all the bytes.
+  switch (type) {
+  case SZ_UINT32_CHUNK:
+  case SZ_SINT32_CHUNK:
+  case SZ_FLOAT_CHUNK:
+  case SZ_COMPOUND_REF_CHUNK: {
+    const uint32_t *data = (const uint32_t *)input;
+    const uint32_t *const data_end = data + length;
+    for (; data != data_end; ++data) {
+      if (sz_write_prim(active, *data)) {
+        return file_error();
+      }
+    }
+  } break;
+
+  // TODO: SZ_DOUBLE_CHUNK support
+
+  default:
+    return SZ_ERROR_INVALID_OPERATION;
+  }
+
+#else
+
+  // If the host endianness is the base endianness, just write it like normal.
+  if (sz_stream_write(input, data_size, active) != data_size) {
+    return file_error();
+  }
+
+#endif
 
   return SZ_SUCCESS;
 }
