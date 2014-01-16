@@ -134,8 +134,9 @@ public:
     sz_allocator_t *alloc
     );
 
-  void *
+  sz_response_t
   get_compound(
+    void **out,
     uint32_t index,
     sz_compound_reader_fn_t reader,
     void *reader_ctx

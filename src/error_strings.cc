@@ -62,6 +62,9 @@ SZ_HIDDEN const char *const sz_errstr_read_on_write =
 SZ_HIDDEN const char *const sz_errstr_compound_reader_null =
   "Failed to deserialize compound object with reader: reader returned NULL.";
 
+SZ_HIDDEN const char *const sz_errstr_compound_zero =
+  "Failed to deserialize compound object: compound reference is 0.";
+
 SZ_HIDDEN const char *const sz_errstr_already_closed =
   "Cannot close serializer that isn't open.";
 

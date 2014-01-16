@@ -568,7 +568,11 @@ sz_read_context_t::read_compound(
       goto sz_read_compound_error;
     }
 
-    result = get_compound(compound_index, reader, reader_ctx);
+    SZ_JUMP_IF_ERROR(
+      get_compound(&result, compound_index, reader, reader_ctx),
+      response,
+      sz_read_compound_error
+      );
   }
 
   if (compound) {
@@ -629,7 +633,16 @@ sz_read_context_t::read_compound_array(
           goto sz_read_compound_array_error;
         }
 
-        compound_ptrs[index] = get_compound(compound_index, reader, reader_ctx);
+        SZ_JUMP_IF_ERROR(
+          get_compound(
+            &compound_ptrs[index],
+            compound_index,
+            reader,
+            reader_ctx
+            ),
+          response,
+          sz_read_compound_array_error
+          );
       }
     } else {
       sz_stream_seek(sizeof(uint32_t) * header.length, SEEK_CUR, stream);
@@ -652,15 +665,17 @@ sz_read_compound_array_error:
 }
 
 
-void *
+sz_response_t
 sz_read_context_t::get_compound(
+  void **out,
   uint32_t index,
   sz_compound_reader_fn_t reader,
   void *reader_ctx
   )
 {
   if (index == 0) {
-    return NULL;
+    error = sz_errstr_compound_zero;
+    return SZ_ERROR_INVALID_OPERATION;
   }
 
   unpacked_compound_t &pack = compounds[index - 1];
@@ -668,12 +683,25 @@ sz_read_context_t::get_compound(
   if (!pack.unpacked) {
     push_stack();
     sz_stream_seek(pack.offset, SEEK_SET, stream);
+
+    sz_header_t header;
+    sz_response_t response;
+    response = read_header(&header, SZ_COMPOUND_CHUNK, index, false);
+    if (response != SZ_SUCCESS) {
+      pop_stack();
+      return response;
+    }
+
     pack.unpacked = true;
     reader(&pack.value, this, reader_ctx);
     pop_stack();
   }
 
-  return pack.value;
+  if (out) {
+    *out = pack.value;
+  }
+
+  return SZ_SUCCESS;
 }
 
 

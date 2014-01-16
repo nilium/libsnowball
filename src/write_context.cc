@@ -205,7 +205,7 @@ sz_write_context_t::flush()
     sz_stream_t *cmp_stream = *iter;
   #endif
     compound_buffers.push_back(sz_buffer_stream_data(cmp_stream));
-    compounds_size += compound_buffers.back().size();
+    compounds_size += compound_buffers.back().size() + sizeof(sz_header_t);
   }
 
   root.compounds_offset = root.mappings_offset + mappings_size;
@@ -229,10 +229,11 @@ sz_write_context_t::flush()
     if (sz_write_prim(stream, relative_offset)) {
       return file_error();
     }
-    relative_offset += uint32_t(buf.size());
+    relative_offset += uint32_t(sizeof(sz_header_t) + buf.size());
   }
 
   // Write compounds
+  uint32_t compound_index = 0;
   #if __cplusplus >= 201103L
   for (const sz_bufstring_t &buf : compound_buffers) {
   #else
@@ -242,9 +243,18 @@ sz_write_context_t::flush()
     const sz_bufstring_t &buf = *cmpbuf_iter;
   #endif
     const size_t write_size = buf.size();
+    sz_header_t compound_head = {
+      SZ_COMPOUND_CHUNK,
+      compound_index + 1,
+      uint32_t(sizeof(compound_head) + write_size)
+    };
+
+    SZ_RETURN_IF_ERROR( write_header(compound_head, stream) );
+
     if (sz_stream_write(buf.data(), write_size, stream) != write_size) {
       return file_error();
     }
+    ++compound_index;
   }
 
   // Write the main data
@@ -330,9 +340,16 @@ sz_write_context_t::write_root(const sz_root_t &root)
 sz_response_t
 sz_write_context_t::write_header(const sz_header_t &header)
 {
-  if (   sz_write_prim(active, header.kind)
-      || sz_write_prim(active, header.name)
-      || sz_write_prim(active, header.size)) {
+  return write_header(header, active);
+}
+
+
+sz_response_t
+sz_write_context_t::write_header(const sz_header_t &header, sz_stream_t *stream_)
+{
+  if (   sz_write_prim(stream_, header.kind)
+      || sz_write_prim(stream_, header.name)
+      || sz_write_prim(stream_, header.size)) {
     return file_error();
   }
 

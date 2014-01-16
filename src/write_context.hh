@@ -75,6 +75,10 @@ public:
   write_header(const sz_header_t &header);
 
 
+  sz_response_t
+  write_header(const sz_header_t &header, sz_stream_t *stream_);
+
+
   // Compounds
   uint32_t
   new_compound(void *compound);

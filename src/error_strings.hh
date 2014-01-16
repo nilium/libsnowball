@@ -41,6 +41,7 @@ SZ_HIDDEN extern const char *const sz_errstr_eof;
 SZ_HIDDEN extern const char *const sz_errstr_write_on_read;
 SZ_HIDDEN extern const char *const sz_errstr_read_on_write;
 SZ_HIDDEN extern const char *const sz_errstr_compound_reader_null;
+SZ_HIDDEN extern const char *const sz_errstr_compound_zero;
 SZ_HIDDEN extern const char *const sz_errstr_already_closed;
 SZ_HIDDEN extern const char *const sz_errstr_already_open;
 SZ_HIDDEN extern const char *const sz_errstr_open_set_stream;
