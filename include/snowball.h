@@ -139,7 +139,7 @@ SZ_DEF_END
 //! @brief Major version number of libsnowball.
 #define SZ_VERSION_MAJOR      1
 //! @brief Minor version number of libsnowball.
-#define SZ_VERSION_MINOR      1
+#define SZ_VERSION_MINOR      2
 //! @brief Reivsion number of libsnowball.
 #define SZ_VERSION_REVISION   0
 
@@ -196,7 +196,7 @@ typedef enum e_sz_magic SZ_TYPE_ENUM(uint32_t)
     file root. First two bytes are always SZ, last two bytes are an ASCII
     format version number.
   */
-  SZ_MAGIC = 0x31305A53
+  SZ_MAGIC = 0x32305A53
 } sz_magic_t;
 
 
