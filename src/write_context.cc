@@ -257,6 +257,13 @@ sz_write_context_t::flush()
     ++compound_index;
   }
 
+  sz_header_t data_head = {
+    SZ_DATA_CHUNK,
+    SZ_DATA_NAME,
+    uint32_t(sizeof(data_head) + data_size)
+  };
+  SZ_RETURN_IF_ERROR( write_header(data_head, stream) );
+
   // Write the main data
   if (   data_size
       && sz_stream_write(main_buf.data(), data_size, stream) != data_size) {

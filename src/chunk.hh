@@ -24,6 +24,11 @@
 #define __CHUNK_HH__
 
 
+enum {
+  SZ_DATA_NAME = 'DATA'
+};
+
+
 typedef struct SZ_HIDDEN s_sz_root
 {
   // magic number -- should be SZ_MAGIC

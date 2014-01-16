@@ -754,6 +754,8 @@ sz_read_context_t::open()
   // Jump to the data (we should already be there, but in case there's)
   sz_stream_seek(data_off, SEEK_SET, stream);
 
+  SZ_RETURN_IF_ERROR( read_header(NULL, SZ_DATA_CHUNK, SZ_DATA_NAME, false) );
+
   return SZ_SUCCESS;
 }
 

@@ -246,6 +246,8 @@ typedef enum e_sz_chunk_id SZ_TYPE_ENUM(uint32_t)
   SZ_NULL_POINTER_CHUNK = 8,
   //! @brief 64-bit float chunk -- currently unused.
   SZ_DOUBLE_CHUNK = 9,
+  //! @brief Main data chunk.
+  SZ_DATA_CHUNK = 10,
 } sz_chunk_id_t;
 
 
