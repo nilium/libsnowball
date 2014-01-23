@@ -285,6 +285,7 @@ sz_read_context_t::read_array_body(
   sz_allocator_t *alloc
   )
 {
+  const bool have_buffer = (buf_out != nullptr) && (*buf_out != nullptr);
   void *buffer;
 
   if (chunk->base.kind == SZ_NULL_POINTER_CHUNK) {
@@ -324,15 +325,22 @@ sz_read_context_t::read_array_body(
   sz_response_t response = SZ_SUCCESS;
 
   if (buf_out) {
-    buffer = sz_malloc(block_remainder, alloc);
-    if (!buffer) {
-      error = sz_errstr_nomem;
-      response = SZ_ERROR_OUT_OF_MEMORY;
-      goto sz_read_array_body_done;
+    if (have_buffer) {
+      buffer = *buf_out;
+    } else {
+      buffer = sz_malloc(block_remainder, alloc);
+
+      if (!buffer) {
+        error = sz_errstr_nomem;
+        response = SZ_ERROR_OUT_OF_MEMORY;
+        goto sz_read_array_body_done;
+      }
     }
 
     if (sz_stream_read(buffer, block_remainder, stream) != block_remainder) {
-      sz_free(buffer, alloc);
+      if (!have_buffer) {
+        sz_free(buffer, alloc);
+      }
       response = file_error();
       goto sz_read_array_body_done;
     }
@@ -351,14 +359,18 @@ sz_read_context_t::read_array_body(
     } break;
 
     default:
-      sz_free(buffer, alloc);
+      if (!have_buffer) {
+        sz_free(buffer, alloc);
+      }
       response = SZ_ERROR_INVALID_OPERATION;
       error = sz_errstr_wrong_kind;
       goto sz_read_array_body_done;
     }
 #endif
 
-    *buf_out = buffer;
+    if (!have_buffer) {
+      *buf_out = buffer;
+    }
   } else {
     error = sz_errstr_cannot_read;
     response = SZ_ERROR_CANNOT_READ;
@@ -415,6 +427,7 @@ sz_read_context_t::read_bytes(
 {
   SZ_RETURN_IF_CLOSED;
 
+  const bool have_buffer = (out != nullptr) && (*out != nullptr);
   sz_response_t response = SZ_SUCCESS;
   sz_header_t header;
   const off_t error_off = sz_stream_tell(stream);
@@ -431,16 +444,23 @@ sz_read_context_t::read_bytes(
     bytes_length = header.size - sizeof(header);
 
     if (out) {
-      buffer = sz_malloc(bytes_length, buf_alloc);
+      if (have_buffer) {
+        buffer = *out;
+      } else {
+        buffer = sz_malloc(bytes_length, buf_alloc);
 
-      if (!buffer) {
-        error = sz_errstr_nomem;
-        response = SZ_ERROR_OUT_OF_MEMORY;
-        goto sz_read_bytes_error;
+        if (!buffer) {
+          error = sz_errstr_nomem;
+          response = SZ_ERROR_OUT_OF_MEMORY;
+          goto sz_read_bytes_error;
+        }
       }
 
+
       if (sz_stream_read(buffer, bytes_length, stream) != bytes_length) {
-        sz_free(buffer, buf_alloc);
+        if (!have_buffer) {
+          sz_free(buffer, buf_alloc);
+        }
         response = file_error();
         goto sz_read_bytes_error;
       }
@@ -601,6 +621,7 @@ sz_read_context_t::read_compound_array(
   sz_array_t header;
   const off_t error_off = sz_stream_tell(stream);
 
+  const bool have_buffer = (compounds != nullptr) && (*compounds != nullptr);
   void **compound_ptrs = NULL;
   size_t array_length = 0;
 
@@ -618,17 +639,23 @@ sz_read_context_t::read_compound_array(
       uint32_t index = 0; // for iterating while reading compound indices
       uint32_t compound_index = 0; // used with get_compound
 
-      compound_ptrs = (void **)sz_malloc(sizeof(void *) * header.length, alloc);
+      if (have_buffer) {
+        compound_ptrs = *compounds;
+      } else {
+        compound_ptrs = (void **)sz_malloc(sizeof(void *) * header.length, alloc);
 
-      if (compound_ptrs == NULL) {
-        error = sz_errstr_nomem;
-        response = SZ_ERROR_OUT_OF_MEMORY;
-        goto sz_read_compound_array_error;
+        if (compound_ptrs == NULL) {
+          error = sz_errstr_nomem;
+          response = SZ_ERROR_OUT_OF_MEMORY;
+          goto sz_read_compound_array_error;
+        }
       }
 
       for (; index < array_length; ++index) {
         if (sz_read_prim(stream, &compound_index)) {
-          sz_free(compound_ptrs, alloc);
+          if (!have_buffer) {
+            sz_free(compound_ptrs, alloc);
+          }
           response = file_error();
           goto sz_read_compound_array_error;
         }
