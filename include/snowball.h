@@ -424,9 +424,10 @@ sz_version();
 
   static void write_vector(void *cmp, sz_context_t *ctx, void *wd) {
     (void)wd; // or the writer data
-    sz_write_float((float *)vectors[0], ctx, 'x');
-    sz_write_float((float *)vectors[1], ctx, 'y');
-    sz_write_float((float *)vectors[2], ctx, 'z');
+    float const *vec0 = &vectors[0];
+    sz_write_float(vec0[0], ctx, 'x');
+    sz_write_float(vec0[1], ctx, 'y');
+    sz_write_float(vec0[2], ctx, 'z');
   }
   @endcode
 
