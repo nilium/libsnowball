@@ -1360,7 +1360,8 @@ sz_read_compounds(
     A pointer to a pointer that will receive the array. May be null, in which
     case no array is allocated and the chunk is effectively skipped
     if it matches. If *out is non-null, it's assumed the block receiving the
-    values is preallocated and can at least as many bytes as held by the chunk.
+    values is preallocated and can hold at least as many bytes as held by the
+    chunk.
   @param length
     A pointer to a size_t that will receive the length of the array.
     May be null.
@@ -1418,7 +1419,8 @@ sz_read_float(float *out, sz_context_t *ctx, uint32_t name);
     A pointer to a pointer that will receive the array. May be null, in which
     case no array is allocated and the chunk is effectively skipped
     if it matches. If *out is non-null, it's assumed the block receiving the
-    values is preallocated and can at least as many values as held by the chunk.
+    values is preallocated and can hold at least as many values as held by the
+    chunk.
   @param length
     A pointer to a size_t that will receive the length of the array.
     May be null.
@@ -1476,7 +1478,8 @@ sz_read_int(int32_t *out, sz_context_t *ctx, uint32_t name);
     A pointer to a pointer that will receive the array. May be null, in which
     case no array is allocated and the chunk is effectively skipped
     if it matches. If *out is non-null, it's assumed the block receiving the
-    values is preallocated and can at least as many values as held by the chunk.
+    values is preallocated and can hold at least as many values as held by the
+    chunk.
   @param length
     A pointer to a size_t that will receive the length of the array.
     May be null.
@@ -1534,7 +1537,8 @@ sz_read_unsigned_int(uint32_t *out, sz_context_t *ctx, uint32_t name);
     A pointer to a pointer that will receive the array. May be null, in which
     case no array is allocated and the chunk is effectively skipped
     if it matches. If *out is non-null, it's assumed the block receiving the
-    values is preallocated and can at least as many values as held by the chunk.
+    values is preallocated and can hold at least as many values as held by the
+    chunk.
   @param length
     A pointer to a size_t that will receive the length of the array.
     May be null.
